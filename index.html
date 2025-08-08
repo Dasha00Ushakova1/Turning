@@ -1,118 +1,92 @@
-<!DOCTYPE html>
+            <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Переводчик новеллы Перепутье</title>
-    <style>
-        /* ваш CSS без изменений */
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
-            margin: 0;
-            padding: 20px;
-        }
-        .container {
-            max-width: 600px;
-            margin: auto;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        h1, h2 {
-            text-align: center;
-        }
-        textarea {
-            width: 100%;
-            height: 150px;
-            margin-bottom: 20px;
-        }
-        button {
-            width: 100%;
-            padding: 10px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        .output {
-            border: 1px solid #ddd;
-            padding: 10px;
-            border-radius: 5px;
-            background: #f9f9f9;
-            white-space: pre-wrap;
-        }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Переводчик с двумя этапами</title>
+<style>
+  body { font-family: Arial; background: #f0f0f0; padding: 20px; }
+  .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 8px; }
+  textarea { width: 100%; height: 150px; margin-bottom: 10px; }
+  button { width: 100%; padding: 10px; font-size: 16px; }
+  .output { border: 1px solid #ccc; background: #fafafa; padding: 10px; min-height: 150px; white-space: pre-wrap; }
+</style>
 </head>
 <body>
-    <div class="container">
-        <h1>Переводчик новеллы "Перепутье"</h1>
-        <textarea id="inputText" placeholder="Введите текст новеллы здесь..."></textarea>
-        <button id="translateButton">Перевести</button>
-        <h2>Результат:</h2>
-        <div id="outputText" class="output"></div>
-    </div>
+<div class="container">
+  <h1>Переводчик новеллы "Перепутье"</h1>
+
+  <h2>Шаг 1: Введите текст на русском и нажмите "Перевести"</h2>
+  <textarea id="inputText" placeholder="Введите текст на русском"></textarea>
+  <button id="translateBtn">Перевести</button>
+
+  <h2>Шаг 2: Отформатировать переведённый текст</h2>
+  <button id="formatBtn" disabled>Форматировать</button>
+  <div id="output" class="output"></div>
+</div>
 
 <script>
-document.getElementById('translateButton').addEventListener('click', async () => {
-    const inputText = document.getElementById('inputText').value.trim();
-    if (!inputText) {
-        alert('Введите текст для перевода');
-        return;
+  const inputText = document.getElementById('inputText');
+  const translateBtn = document.getElementById('translateBtn');
+  const formatBtn = document.getElementById('formatBtn');
+  const output = document.getElementById('output');
+
+  let translatedText = '';
+
+  translateBtn.addEventListener('click', () => {
+    const text = inputText.value.trim();
+    if (!text) {
+      alert('Введите текст для перевода');
+      return;
     }
-    document.getElementById('outputText').innerHTML = 'Перевод... Пожалуйста, подождите.';
+    translateBtn.disabled = true;
+    translateBtn.textContent = 'Перевод...';
 
-    try {
-        // Отправляем запрос к LibreTranslate
-        const response = await fetch('https://libretranslate.de/translate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                q: inputText,
-                source: 'auto',  // автоматическое определение языка
-                target: 'ru',    // перевод на русский
-                format: 'text'
-            })
-        });
+    // Здесь вызов реального API перевода через сервер или заглушка
+    fakeTranslate(text).then(result => {
+      translatedText = result;
+      output.textContent = translatedText;
+      formatBtn.disabled = false;
+    }).catch(err => {
+      alert('Ошибка перевода: ' + err);
+    }).finally(() => {
+      translateBtn.disabled = false;
+      translateBtn.textContent = 'Перевести';
+    });
+  });
 
-        if (!response.ok) throw new Error('Ошибка перевода: ' + response.statusText);
+  formatBtn.addEventListener('click', () => {
+    if (!translatedText) return;
+    const formatted = formatNovelText(translatedText);
+    output.innerHTML = formatted;
+  });
 
-        const data = await response.json();
-        let translated = data.translatedText;
+  // Заглушка перевода — просто заменяет русские слова на английские (пример)
+  function fakeTranslate(text) {
+    return new Promise((resolve) => {
+      // Пример простой замены для демонстрации
+      const dictionary = {
+        'Привет': 'Hello',
+        'мир': 'world',
+        'Как дела': 'How are you',
+        'Перепутье': 'Crossroads',
+      };
+      let result = text;
+      for (const [ru, en] of Object.entries(dictionary)) {
+        const re = new RegExp(ru, 'g');
+        result = result.replace(re, en);
+      }
+      // Имитируем задержку
+      setTimeout(() => resolve(result), 500);
+    });
+  }
 
-        // Обработка форматирования и имён
-        translated = formatNovelText(translated);
-
-        document.getElementById('outputText').innerHTML = translated;
-
-    } catch (error) {
-        document.getElementById('outputText').innerHTML = 'Ошибка: ' + error.message;
-    }
-});
-
-function formatNovelText(text) {
-    // Форматируем диалоги: имя говорящего до двоеточия — жирным
+  function formatNovelText(text) {
+    // Жирным выделяем имена перед двоеточием
     text = text.replace(/(\b[А-ЯЁ][а-яё]+(?:\s[А-ЯЁ][а-яё]+)*):/g, '<strong>\$1:</strong>');
-
-    // Заменяем переносы строк на <br>
     text = text.replace(/\n/g, '<br>');
-
-    // Убираем лишние пробелы (заменяем несколько пробелов на один)
-    text = text.replace(/\s+/g, ' ');
-
-    // Обработка имён с указанием пола (пример)
-    text = text.replace(/Юдер Айл/g, 'Юдрейн Айл (мужской)')
-               .replace(/Гакейн Болунвальд/g, 'Гакейн Болунвальд (женский)')
-               .replace(/Натан Цукерман/g, 'Натан Цукерман (мужской)')
-               .replace(/Кишиар/g, 'Кишиар (мужской)');
-
     return text;
-}
+  }
 </script>
 </body>
 </html>
