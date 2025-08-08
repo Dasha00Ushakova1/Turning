@@ -1,92 +1,137 @@
 
+<!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Переводчик с двумя этапами</title>
+<title>Имитация перевода с англ/исп на русский</title>
 <style>
-  body { font-family: Arial; background: #f0f0f0; padding: 20px; }
-  .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 8px; }
-  textarea { width: 100%; height: 150px; margin-bottom: 10px; }
-  button { width: 100%; padding: 10px; font-size: 16px; }
-  .output { border: 1px solid #ccc; background: #fafafa; padding: 10px; min-height: 150px; white-space: pre-wrap; }
+  body { font-family: Arial, sans-serif; padding: 20px; background: #f9f9f9; }
+  textarea, select { width: 100%; margin-bottom: 10px; font-size: 16px; padding: 8px; }
+  button { padding: 10px 20px; font-size: 16px; }
+  .output { white-space: pre-wrap; background: #fff; padding: 15px; border: 1px solid #ccc; min-height: 150px; margin-top: 10px; }
 </style>
 </head>
 <body>
-<div class="container">
-  <h1>Переводчик новеллы "Перепутье"</h1>
-
-  <h2>Шаг 1: Введите текст на русском и нажмите "Перевести"</h2>
-  <textarea id="inputText" placeholder="Введите текст на русском"></textarea>
-  <button id="translateBtn">Перевести</button>
-
-  <h2>Шаг 2: Отформатировать переведённый текст</h2>
-  <button id="formatBtn" disabled>Форматировать</button>
+  <h1>Имитация перевода с английского/испанского на русский</h1>
+  <label for="lang">Выберите язык ввода:</label>
+  <select id="lang">
+    <option value="en">Английский</option>
+    <option value="es">Испанский</option>
+  </select>
+  <textarea id="inputText" placeholder="Введите текст..."></textarea>
+  <button id="translateBtn">Перевести и отформатировать</button>
   <div id="output" class="output"></div>
-</div>
 
 <script>
-  const inputText = document.getElementById('inputText');
-  const translateBtn = document.getElementById('translateBtn');
-  const formatBtn = document.getElementById('formatBtn');
-  const output = document.getElementById('output');
+  // Простейшие словари для имитации
+  const dictionaries = {
+    en: {
+      hello: 'привет',
+      world: 'мир',
+      how: 'как',
+      are: 'ты',
+      you: 'ты',
+      good: 'хорошо',
+      morning: 'утро',
+      evening: 'вечер',
+      cat: 'кот',
+      dog: 'собака',
+      thank: 'спасибо',
+      please: 'пожалуйста',
+      yes: 'да',
+      no: 'нет',
+      i: 'я',
+      am: 'есть',
+      fine: 'в порядке',
+      what: 'что',
+      is: 'это',
+      your: 'твой',
+      name: 'имя'
+    },
+    es: {
+      hola: 'привет',
+      mundo: 'мир',
+      cómo: 'как',
+      estás: 'ты',
+      bien: 'хорошо',
+      mañana: 'утро',
+      noche: 'ночь',
+      gato: 'кот',
+      perro: 'собака',
+      gracias: 'спасибо',
+      por: 'за',
+      favor: 'пожалуйста',
+      sí: 'да',
+      no: 'нет',
+      yo: 'я',
+      estoy: 'есть',
+      bien: 'в порядке',
+      qué: 'что',
+      es: 'это',
+      tu: 'твой',
+      nombre: 'имя'
+    }
+  };
 
-  let translatedText = '';
+  function translateWord(word, dict) {
+    const lower = word.toLowerCase();
+    if (dict[lower]) {
+      // Сохраняем регистр первой буквы
+      if (word[0] === word[0].toUpperCase()) {
+        return dict[lower][0].toUpperCase() + dict[lower].slice(1);
+      }
+      return dict[lower];
+    }
+    return word;
+  }
 
-  translateBtn.addEventListener('click', () => {
-    const text = inputText.value.trim();
-    if (!text) {
-      alert('Введите текст для перевода');
+  function translateText(text, lang) {
+    // Разбиваем на слова и знаки пунктуации
+    // Регулярка ищет слова и знаки отдельно
+    const tokens = text.match(/[\wÀ-ÿ]+|[^\s\wÀ-ÿ]+/g) || [];
+    const dict = dictionaries[lang];
+
+    const translatedTokens = tokens.map(token => {
+      // Если это слово (буквы или с диакритикой)
+      if (/^[\wÀ-ÿ]+$/.test(token)) {
+        return translateWord(token, dict);
+      }
+      return token;
+    });
+
+    return translatedTokens.join('');
+  }
+
+  function formatText(text) {
+    text = text.replace(/\s+/g, ' ').trim();
+    // Разбиваем на предложения по . ! ?
+    const sentences = text.split(/([.!?])/);
+    let result = '';
+    for (let i = 0; i < sentences.length; i += 2) {
+      let sentence = sentences[i].trim();
+      if (!sentence) continue;
+      sentence = sentence[0].toUpperCase() + sentence.slice(1);
+      result += sentence;
+      if (sentences[i + 1]) {
+        result += sentences[i + 1] + ' ';
+      } else {
+        result += ' ';
+      }
+    }
+    return result.trim();
+  }
+
+  document.getElementById('translateBtn').addEventListener('click', () => {
+    const lang = document.getElementById('lang').value;
+    const input = document.getElementById('inputText').value;
+    if (!input.trim()) {
+      alert('Пожалуйста, введите текст для перевода.');
       return;
     }
-    translateBtn.disabled = true;
-    translateBtn.textContent = 'Перевод...';
-
-    // Здесь вызов реального API перевода через сервер или заглушка
-    fakeTranslate(text).then(result => {
-      translatedText = result;
-      output.textContent = translatedText;
-      formatBtn.disabled = false;
-    }).catch(err => {
-      alert('Ошибка перевода: ' + err);
-    }).finally(() => {
-      translateBtn.disabled = false;
-      translateBtn.textContent = 'Перевести';
-    });
+    const translated = translateText(input, lang);
+    const formatted = formatText(translated);
+    document.getElementById('output').textContent = formatted;
   });
-
-  formatBtn.addEventListener('click', () => {
-    if (!translatedText) return;
-    const formatted = formatNovelText(translatedText);
-    output.innerHTML = formatted;
-  });
-
-  // Заглушка перевода — просто заменяет русские слова на английские (пример)
-  function fakeTranslate(text) {
-    return new Promise((resolve) => {
-      // Пример простой замены для демонстрации
-      const dictionary = {
-        'Привет': 'Hello',
-        'мир': 'world',
-        'Как дела': 'How are you',
-        'Перепутье': 'Crossroads',
-      };
-      let result = text;
-      for (const [ru, en] of Object.entries(dictionary)) {
-        const re = new RegExp(ru, 'g');
-        result = result.replace(re, en);
-      }
-      // Имитируем задержку
-      setTimeout(() => resolve(result), 500);
-    });
-  }
-
-  function formatNovelText(text) {
-    // Жирным выделяем имена перед двоеточием
-    text = text.replace(/(\b[А-ЯЁ][а-яё]+(?:\s[А-ЯЁ][а-яё]+)*):/g, '<strong>\$1:</strong>');
-    text = text.replace(/\n/g, '<br>');
-    return text;
-  }
 </script>
 </body>
 </html>
