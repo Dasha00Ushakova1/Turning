@@ -3,135 +3,99 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8" />
-<title>Имитация перевода с англ/исп на русский</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Переводчик с английского и испанского на русский</title>
 <style>
-  body { font-family: Arial, sans-serif; padding: 20px; background: #f9f9f9; }
-  textarea, select { width: 100%; margin-bottom: 10px; font-size: 16px; padding: 8px; }
-  button { padding: 10px 20px; font-size: 16px; }
-  .output { white-space: pre-wrap; background: #fff; padding: 15px; border: 1px solid #ccc; min-height: 150px; margin-top: 10px; }
+  body {
+    font-family: Arial, sans-serif;
+    margin: 40px;
+    background-color: #f0f0f0;
+  }
+  h1 {
+    text-align: center;
+  }
+  textarea {
+    width: 100%;
+    height: 100px;
+    margin-top: 10px;
+    padding: 10px;
+    font-size: 16px;
+  }
+  select {
+    margin-top: 10px;
+    font-size: 16px;
+  }
+  button {
+    margin-top: 15px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  #result {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #fff;
+    min-height: 50px;
+    border-radius: 5px;
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
+  }
 </style>
 </head>
 <body>
-  <h1>Имитация перевода с английского/испанского на русский</h1>
-  <label for="lang">Выберите язык ввода:</label>
-  <select id="lang">
-    <option value="en">Английский</option>
-    <option value="es">Испанский</option>
-  </select>
-  <textarea id="inputText" placeholder="Введите текст..."></textarea>
-  <button id="translateBtn">Перевести и отформатировать</button>
-  <div id="output" class="output"></div>
+
+<h1>Переводчик с английского и испанского на русский</h1>
+
+<label for="sourceText">Введите текст:</label>
+<textarea id="sourceText" placeholder="Введите текст для перевода..."></textarea>
+
+<label for="language">Выберите язык исходного текста:</label>
+<select id="language">
+  <option value="en">Английский</option>
+  <option value="es">Испанский</option>
+</select>
+
+<button onclick="translateText()">Перевести</button>
+
+<h2>Результат:</h2>
+<div id="result">Здесь появится перевод...</div>
 
 <script>
-  // Простейшие словари для имитации
-  const dictionaries = {
-    en: {
-      hello: 'привет',
-      world: 'мир',
-      how: 'как',
-      are: 'ты',
-      you: 'ты',
-      good: 'хорошо',
-      morning: 'утро',
-      evening: 'вечер',
-      cat: 'кот',
-      dog: 'собака',
-      thank: 'спасибо',
-      please: 'пожалуйста',
-      yes: 'да',
-      no: 'нет',
-      i: 'я',
-      am: 'есть',
-      fine: 'в порядке',
-      what: 'что',
-      is: 'это',
-      your: 'твой',
-      name: 'имя'
-    },
-    es: {
-      hola: 'привет',
-      mundo: 'мир',
-      cómo: 'как',
-      estás: 'ты',
-      bien: 'хорошо',
-      mañana: 'утро',
-      noche: 'ночь',
-      gato: 'кот',
-      perro: 'собака',
-      gracias: 'спасибо',
-      por: 'за',
-      favor: 'пожалуйста',
-      sí: 'да',
-      no: 'нет',
-      yo: 'я',
-      estoy: 'есть',
-      bien: 'в порядке',
-      qué: 'что',
-      es: 'это',
-      tu: 'твой',
-      nombre: 'имя'
+// Используем API LibreTranslate (https://libretranslate.com/)
+async function translateText() {
+    const text = document.getElementById('sourceText').value.trim();
+    const lang = document.getElementById('language').value;
+
+    if (!text) {
+        alert('Пожалуйста, введите текст для перевода.');
+        return;
     }
-  };
 
-  function translateWord(word, dict) {
-    const lower = word.toLowerCase();
-    if (dict[lower]) {
-      // Сохраняем регистр первой буквы
-      if (word[0] === word[0].toUpperCase()) {
-        return dict[lower][0].toUpperCase() + dict[lower].slice(1);
-      }
-      return dict[lower];
+    const resultDiv = document.getElementById('result');
+    resultDiv.innerHTML = 'Перевод выполняется...';
+
+    try {
+        const response = await fetch('https://libretranslate.com/translate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                q: text,
+                source: lang,
+                target: 'ru',
+                format: 'text'
+            })
+        });
+        if (!response.ok) {
+            throw new Error('Ошибка при выполнении запроса');
+        }
+        const data = await response.json();
+        resultDiv.innerHTML = data.translatedText;
+    } catch (error) {
+        console.error(error);
+        resultDiv.innerHTML = 'Произошла ошибка при переводе.';
     }
-    return word;
-  }
-
-  function translateText(text, lang) {
-    // Разбиваем на слова и знаки пунктуации
-    // Регулярка ищет слова и знаки отдельно
-    const tokens = text.match(/[\wÀ-ÿ]+|[^\s\wÀ-ÿ]+/g) || [];
-    const dict = dictionaries[lang];
-
-    const translatedTokens = tokens.map(token => {
-      // Если это слово (буквы или с диакритикой)
-      if (/^[\wÀ-ÿ]+$/.test(token)) {
-        return translateWord(token, dict);
-      }
-      return token;
-    });
-
-    return translatedTokens.join('');
-  }
-
-  function formatText(text) {
-    text = text.replace(/\s+/g, ' ').trim();
-    // Разбиваем на предложения по . ! ?
-    const sentences = text.split(/([.!?])/);
-    let result = '';
-    for (let i = 0; i < sentences.length; i += 2) {
-      let sentence = sentences[i].trim();
-      if (!sentence) continue;
-      sentence = sentence[0].toUpperCase() + sentence.slice(1);
-      result += sentence;
-      if (sentences[i + 1]) {
-        result += sentences[i + 1] + ' ';
-      } else {
-        result += ' ';
-      }
-    }
-    return result.trim();
-  }
-
-  document.getElementById('translateBtn').addEventListener('click', () => {
-    const lang = document.getElementById('lang').value;
-    const input = document.getElementById('inputText').value;
-    if (!input.trim()) {
-      alert('Пожалуйста, введите текст для перевода.');
-      return;
-    }
-    const translated = translateText(input, lang);
-    const formatted = formatText(translated);
-    document.getElementById('output').textContent = formatted;
-  });
+}
 </script>
+
 </body>
 </html>
+      
