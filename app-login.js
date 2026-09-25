@@ -17,9 +17,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const fullName = USERS[login];
         if (!fullName) {
             error.textContent = 'Пользователь с таким логином не найден';
-            showModal('Ошибка входа',
-                'Пользователь с указанным логином не найден. Проверьте правильность ввода.',
-                'error');
+            if (typeof showModal === 'function') {
+                showModal(
+                    'Ошибка входа',
+                    'Пользователь с указанным логином не найден. Проверьте правильность ввода.',
+                    'error'
+                );
+            }
             return;
         }
 
