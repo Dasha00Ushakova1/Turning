@@ -1,10 +1,33 @@
 'use strict';
 
+/* ============================================================
+ * Карта изображений товаров (по коду товара из БД)
+ * ============================================================ */
+const PRODUCT_IMAGES = {
+    1:  './Белые перчатки.png',
+    2:  './Черные перчатки.jpg',
+    3:  './Красный камень.jpg',
+    4:  './Чай от Юдера.jpg',
+    5:  './Карасик.jpg',
+    6:  './Очки Кейлуса.png',
+    7:  './Красная нитка от Энона.jpg',
+    8:  './Слёзы Киолле.png',
+    9:  './Ваза от Канны.jpg',
+    10: './Травы от Энона.jpg'
+};
+
+/** Заглушка, если картинки для товара нет. */
+const PLACEHOLDER_IMAGE = 'https://placehold.co/300x300?text=No+Image';
+
 document.addEventListener('DOMContentLoaded', async () => {
     const user = requireAuth();
     if (!user) return;
 
     document.getElementById('user-name').textContent = user.fullName;
+    const roleLabel = { customer: 'Клиент', manager: 'Менеджер', admin: 'Администратор' };
+    const roleEl = document.getElementById('user-role');
+    if (roleEl) roleEl.textContent = roleLabel[user.role] || '';
+
     document.getElementById('back-to-catalog')
         .addEventListener('click', () => { window.location.href = 'catalog.html'; });
 
@@ -52,7 +75,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         finalPrice,
         discountPercent,
         stockLabel: getStockLabel(p.Quantity),
-        imageUrl: p.Image_URL || null,
         description: p.Description || null
     };
 
@@ -86,9 +108,10 @@ function renderView(db, product, user) {
               </label>`).join('')}</div>`
         : '<p class="product__no-sizes">Размеры не указаны</p>';
 
-    const imageUrl = product.imageUrl
-        || `https://placehold.co/300x300?text=${encodeURIComponent(product.name)}`;
+    /* Картинка: сначала — из карты, иначе — заглушка */
+    const imageUrl = PRODUCT_IMAGES[product.code] || PLACEHOLDER_IMAGE;
 
+    /* Описание: если в БД нет — берём название товара */
     const description = product.description || product.name;
 
     const actionsHtml = user.role === 'customer'
@@ -105,7 +128,8 @@ function renderView(db, product, user) {
         `;
 
     document.getElementById('product-details').innerHTML = `
-        <img class="product__image" src="${imageUrl}" alt="${product.name}">
+        <img class="product__image" src="${imageUrl}" alt="${product.name}"
+             onerror="this.src='${PLACEHOLDER_IMAGE}'">
         <div class="product__info">
             <h2 class="product__name">${product.name}</h2>
             <p class="product__desc">${description}</p>
