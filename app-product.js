@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('cancel-order')
         .addEventListener('click', () => window.location.href = 'catalog.html');
 
-    document.getElementById('add-to-order').addEventListener('click', () => {
+       document.getElementById('add-to-cart').addEventListener('click', () => {
         const value = Number(quantityInput.value);
         if (!Number.isInteger(value) || value < 1) {
             showModal('Некорректное значение',
@@ -108,6 +108,25 @@ document.addEventListener('DOMContentLoaded', async () => {
                 `На складе осталось ${product.quantity} шт.`, 'warning');
             return;
         }
+
+        const sizeInput = document.querySelector('input[name="size"]:checked');
+        const size = sizeInput ? sizeInput.value : '—';
+
+        store.addToCart({
+            code: product.code,
+            name: product.name,
+            price: product.finalPrice,
+            size,
+            quantity: value
+        });
+
+        updateCartBadge();
+        showToast(`«${product.name}» (${size}, ${value} шт.) добавлен в корзину`, 'success');
+    });
+
+    document.getElementById('goto-cart').addEventListener('click', () => {
+        window.location.href = 'cart.html';
+    });
 
         const sizeInput = document.querySelector('input[name="size"]:checked');
         const size = sizeInput ? sizeInput.value : '—';
