@@ -9,7 +9,7 @@ const USERS = {
     'ever':    { fullName: 'Эвер Бэк',         role: 'customer' },
     'hinn':    { fullName: 'Хинн Элдер',       role: 'customer' },
     'finn':    { fullName: 'Финн Элдер',       role: 'customer' },
-    'manager': { fullName: 'Лушан', role: 'manager'  },
+    'manager': { fullName: 'Мик Шуден', role: 'manager'  },
     'admin':   { fullName: 'Энон',   role: 'admin'    }
 };
 
