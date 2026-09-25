@@ -288,10 +288,19 @@ body {
    Модальное окно и тост
    ============================== */
 .modal {
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.5);
-    display: flex; align-items: center; justify-content: center;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;                    /* скрыто по умолчанию */
+    align-items: center;
+    justify-content: center;
     z-index: 100;
+}
+.modal.modal--visible {
+    display: flex;                    /* показывается только с этим классом */
+}
+.modal[hidden] {
+    display: none !important;
 }
 .modal__window {
     background: #fff;
