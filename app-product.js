@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         .addEventListener('click', () => { window.location.href = 'catalog.html'; });
 
     const params = new URLSearchParams(window.location.search);
-    const mode = params.get('mode') || 'view'; // view | edit | create
+    const mode = params.get('mode') || 'view';
     const isAdmin = store.isAdmin();
 
     let db;
@@ -20,13 +20,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    // ============ РЕЖИМ СОЗДАНИЯ ============
     if (mode === 'create' && isAdmin) {
         renderCreateForm(db);
         return;
     }
 
-    // ============ РЕЖИМ ПРОСМОТРА / РЕДАКТИРОВАНИЯ ============
     const code = store.getSelectedProduct();
     if (!code) {
         window.location.href = 'catalog.html';
@@ -54,14 +52,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (mode === 'edit' && isAdmin) {
         renderEditForm(db, product);
     } else {
-        renderView(db, product);
+        renderView(db, product, user);
     }
 });
 
 /* ============================================================
- * Просмотр
+ * Просмотр товара
  * ============================================================ */
-function renderView(db, product) {
+function renderView(db, product, user) {
     const sizes = query(db,
         `SELECT Size FROM Product_Sizes WHERE Product_Code = ${product.code}`
     ).map(r => r.Size);
@@ -73,6 +71,20 @@ function renderView(db, product) {
                   <span>${s}</span>
               </label>`).join('')}</div>`
         : '<p class="product__no-sizes">Размеры не указаны</p>';
+
+    // Кнопка заказа — только у клиента
+    const actionsHtml = user.role === 'customer'
+        ? `
+            <div class="product__actions">
+                <button id="place-order" class="btn btn--primary" type="button">Оформить заказ</button>
+                <button id="cancel-order" class="btn btn--ghost btn--dark" type="button">Отмена</button>
+            </div>
+        `
+        : `
+            <div class="product__actions">
+                <button id="cancel-order" class="btn btn--ghost btn--dark" type="button">Назад</button>
+            </div>
+        `;
 
     document.getElementById('product-details').innerHTML = `
         <img class="product__image"
@@ -86,21 +98,24 @@ function renderView(db, product) {
             <p class="product__row"><b>Доступно:</b> ${product.quantity} шт.
                 <span class="badge ${product.stockLabel === 'много' ? 'badge--many' : 'badge--few'}">${product.stockLabel}</span></p>
 
-            <h3 class="product__section">Размеры</h3>
+            <h3 class="product__section">Размер</h3>
             ${sizesHtml}
 
-            <h3 class="product__section">Количество</h3>
-            <input id="product-quantity" class="field__input" type="number"
-                   min="1" max="${product.quantity}" value="1">
-            <span class="field__error" id="quantity-error"></span>
+            ${user.role === 'customer' ? `
+                <h3 class="product__section">Количество</h3>
+                <input id="product-quantity" class="field__input" type="number"
+                       min="1" max="${product.quantity}" value="1">
+                <span class="field__error" id="quantity-error"></span>
+            ` : ''}
 
-            <div class="product__actions">
-                <button id="add-to-cart" class="btn btn--primary" type="button">Добавить в корзину</button>
-                <button id="goto-cart" class="btn btn--ghost btn--dark" type="button">Перейти в корзину</button>
-                <button id="cancel-order" class="btn btn--ghost btn--dark" type="button">Отмена</button>
-            </div>
+            ${actionsHtml}
         </div>
     `;
+
+    document.getElementById('cancel-order')
+        .addEventListener('click', () => { window.location.href = 'catalog.html'; });
+
+    if (user.role !== 'customer') return;
 
     const quantityInput = document.getElementById('product-quantity');
     const quantityError = document.getElementById('quantity-error');
@@ -116,10 +131,7 @@ function renderView(db, product) {
         }
     });
 
-    document.getElementById('cancel-order')
-        .addEventListener('click', () => { window.location.href = 'catalog.html'; });
-
-    document.getElementById('add-to-cart').addEventListener('click', () => {
+    document.getElementById('place-order').addEventListener('click', () => {
         const value = Number(quantityInput.value);
         if (!Number.isInteger(value) || value < 1) {
             showModal('Некорректное значение',
@@ -135,20 +147,30 @@ function renderView(db, product) {
         const sizeInput = document.querySelector('input[name="size"]:checked');
         const size = sizeInput ? sizeInput.value : '—';
 
-        store.addToCart({
-            code: product.code,
-            name: product.name,
-            price: product.finalPrice,
-            size,
-            quantity: value
-        });
+        const orderCode = generateOrderCode(db);
+        const order = {
+            code: orderCode,
+            date: new Date().toISOString().slice(0, 10),
+            customer: user.fullName,
+            customerLogin: user.login,
+            items: [{
+                productCode: product.code,
+                productName: product.name,
+                size,
+                quantity: value,
+                price: product.finalPrice
+            }],
+            total: product.finalPrice * value
+        };
 
-        updateCartBadge();
-        showToast(`«${product.name}» (${size}, ${value} шт.) добавлен в корзину`, 'success');
-    });
+        store.addOrder(order);
 
-    document.getElementById('goto-cart').addEventListener('click', () => {
-        window.location.href = 'cart.html';
+        showModal('Заказ оформлен',
+            `Заказ №${orderCode} на сумму ${formatPrice(order.total)} сохранён.`,
+            'info');
+        document.getElementById('modal-ok').addEventListener('click', () => {
+            window.location.href = 'orders.html';
+        }, { once: true });
     });
 }
 
@@ -164,13 +186,11 @@ function renderEditForm(db, product) {
                 <span class="field__label">Название</span>
                 <input id="edit-name" class="field__input" type="text" value="${product.name}">
             </label>
-
             <label class="field">
                 <span class="field__label">Цена, ₽</span>
                 <input id="edit-price" class="field__input" type="number" min="0" step="0.01"
                        value="${product.price}">
             </label>
-
             <label class="field">
                 <span class="field__label">Количество</span>
                 <input id="edit-quantity" class="field__input" type="number" min="0"
@@ -196,12 +216,8 @@ function renderEditForm(db, product) {
             showModal('Ошибка', 'Название не может быть пустым.', 'warning');
             return;
         }
-        if (!(price >= 0)) {
-            showModal('Ошибка', 'Цена должна быть неотрицательным числом.', 'warning');
-            return;
-        }
-        if (!Number.isInteger(quantity) || quantity < 0) {
-            showModal('Ошибка', 'Количество должно быть целым неотрицательным числом.', 'warning');
+        if (!(price >= 0) || !Number.isInteger(quantity) || quantity < 0) {
+            showModal('Ошибка', 'Проверьте цену и количество.', 'warning');
             return;
         }
 
@@ -212,7 +228,7 @@ function renderEditForm(db, product) {
                         Price = ${price},
                         Quantity = ${quantity}
                     WHERE Product_Code = ${product.code}`);
-            showModal('Готово', 'Товар обновлён. Возвращаемся в каталог.', 'info');
+            showModal('Готово', 'Товар обновлён.', 'info');
             document.getElementById('modal-ok').addEventListener('click', () => {
                 window.location.href = 'catalog.html';
             }, { once: true });
@@ -234,14 +250,12 @@ function renderCreateForm(db) {
 
             <label class="field">
                 <span class="field__label">Название</span>
-                <input id="edit-name" class="field__input" type="text" placeholder="Например, Синие перчатки">
+                <input id="edit-name" class="field__input" type="text">
             </label>
-
             <label class="field">
                 <span class="field__label">Цена, ₽</span>
                 <input id="edit-price" class="field__input" type="number" min="0" step="0.01" value="100">
             </label>
-
             <label class="field">
                 <span class="field__label">Количество</span>
                 <input id="edit-quantity" class="field__input" type="number" min="0" value="1">
@@ -275,7 +289,7 @@ function renderCreateForm(db) {
         try {
             db.run(`INSERT INTO Products (Product_Code, Product_Name, Price, Quantity)
                     VALUES (${nextCode}, '${safeName}', ${price}, ${quantity})`);
-            showModal('Готово', `Товар «${name}» добавлен в каталог.`, 'info');
+            showModal('Готово', `Товар «${name}» добавлен.`, 'info');
             document.getElementById('modal-ok').addEventListener('click', () => {
                 window.location.href = 'catalog.html';
             }, { once: true });
@@ -283,4 +297,11 @@ function renderCreateForm(db) {
             showModal('Ошибка создания', e.message, 'error');
         }
     });
+}
+
+/** Генерирует следующий номер заказа. */
+function generateOrderCode(db) {
+    const local = store.getOrders().reduce((m, o) => Math.max(m, o.code), 0);
+    const fromDb = query(db, 'SELECT MAX(Order_Code) AS m FROM Orders')[0]?.m || 0;
+    return Math.max(local, fromDb) + 1;
 }
