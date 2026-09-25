@@ -72,11 +72,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                    min="1" max="${product.quantity}" value="1">
             <span class="field__error" id="quantity-error"></span>
 
-            <div class="product__actions">
-                <button id="add-to-order" class="btn btn--primary" type="button">Добавить в заказ</button>
-                <button id="cancel-order" class="btn btn--ghost" type="button">Отмена</button>
+                       <div class="product__actions">
+                <button id="add-to-cart" class="btn btn--primary" type="button">Добавить в корзину</button>
+                <button id="goto-cart" class="btn btn--ghost btn--dark" type="button">Перейти в корзину</button>
+                <button id="cancel-order" class="btn btn--ghost btn--dark" type="button">Отмена</button>
             </div>
-        </div>
     `;
 
     const quantityInput = document.getElementById('product-quantity');
