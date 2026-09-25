@@ -128,21 +128,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.location.href = 'cart.html';
     });
 
-        const sizeInput = document.querySelector('input[name="size"]:checked');
-        const size = sizeInput ? sizeInput.value : '—';
-
-        const order = {
-            code: generateOrderCode(db),
-            date: new Date().toISOString().slice(0, 10),
-            customer: user.fullName,
-            productCode: product.code,
-            productName: product.name,
-            size,
-            quantity: value,
-            total: product.finalPrice * value
-        };
-        store.addOrder(order);
-
         showModal('Заказ оформлен',
             `«${product.name}», размер ${size}, ${value} шт. — добавлено в заказ №${order.code}.`,
             'info');
