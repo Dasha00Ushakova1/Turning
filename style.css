@@ -70,9 +70,13 @@ body {
     margin-bottom: 16px;
 }
 .login-card__logo-img {
-    width: 140px; height: 140px;
-    object-fit: contain;
-    border-radius: var(--radius);
+    width: 96px;
+    height: 96px;
+    object-fit: cover;           /* картинка заполняет круг, не растягиваясь */
+    border-radius: 50%;          /* круг */
+    border: 3px solid var(--color-accent); /* аккуратная рамка в цвет акцента */
+    background: #fff;
+    padding: 4px;                /* белый отступ внутри рамки */
 }
 
 /* ==============================================================
