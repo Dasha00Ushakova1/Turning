@@ -16,19 +16,13 @@
             </div>
             <div class="user-box">
                 <span id="user-name" class="user-box__name"></span>
+                <a href="cart.html" class="btn btn--ghost cart-link">
+                    🛒 Корзина <span id="cart-count" class="cart-badge" hidden>0</span>
+                </a>
                 <button id="goto-orders" class="btn btn--ghost" type="button">Мои заказы</button>
                 <button id="logout-btn" class="btn btn--ghost" type="button">Выйти</button>
-                            <table class="data-table">
-                <thead class="data-table__head">
-                  
-                </thead>
-                <tbody class="data-table__body" id="catalog-body"></tbody>
-            </table>
             </div>
         </header>
-            <script src="./sql-wasm.js"></script>
-    <script src="./db.js"></script>
-    <script src="./app-catalog.js"></script>
 
         <main class="app-main">
             <h2 class="section__title">Каталог товаров</h2>
@@ -36,13 +30,11 @@
             <div class="toolbar">
                 <input id="search-input" class="field__input" type="text"
                        placeholder="Поиск по названию...">
-
                 <select id="filter-stock" class="field__input">
                     <option value="all">Все товары</option>
                     <option value="many">Только «много»</option>
                     <option value="few">Только «мало»</option>
                 </select>
-
                 <select id="sort-select" class="field__input">
                     <option value="code-asc">Код ↑</option>
                     <option value="code-desc">Код ↓</option>
@@ -60,6 +52,7 @@
                     <tr>
                         <th>Код</th><th>Название</th><th>Цена</th>
                         <th>Цена со скидкой</th><th>Количество</th><th>Наличие</th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody class="data-table__body" id="catalog-body"></tbody>
