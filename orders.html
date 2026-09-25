@@ -3,29 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Turning Shop — Мои заказы</title>
+    <title>Turning Shop — Заказы</title>
     <link rel="stylesheet" href="./style.css">
 </head>
 <body>
     <section class="screen screen--active">
         <header class="app-header">
-            <button id="back-to-catalog" class="btn btn--ghost" type="button">← Назад</button>
-            <h2 class="app-header__title">Мои заказы</h2>
-            <span id="user-name" class="user-box__name"></span>
+            <button id="back-to-catalog" class="btn btn--ghost" type="button">← В каталог</button>
+            <h2 class="app-header__title">Заказы</h2>
+            <div class="user-box">
+                <span id="user-name" class="user-box__name"></span>
+                <span id="user-role" class="user-box__role"></span>
+            </div>
         </header>
 
         <main class="app-main">
+            <div class="toolbar">
+                <button id="new-order-btn" class="btn btn--primary" type="button" hidden>
+                    + Новый заказ
+                </button>
+                <input id="orders-search" class="field__input" type="text"
+                       placeholder="Поиск по ФИО клиента...">
+            </div>
+
             <table class="data-table">
                 <thead class="data-table__head">
                     <tr>
-                        <th>Код</th><th>Дата</th><th>Состав</th><th>Сумма</th>
+                        <th>Код</th>
+                        <th>Дата</th>
+                        <th>Клиент</th>
+                        <th>Состав</th>
+                        <th>Сумма</th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody class="data-table__body" id="orders-body"></tbody>
             </table>
+
             <p id="orders-empty" class="data-table__empty" hidden>Заказов нет</p>
         </main>
     </section>
+
+    <!-- Модальное окно: состав заказа -->
+    <div id="order-modal" class="modal" hidden>
+        <div class="modal__window modal__window--wide">
+            <h3 id="order-modal-title" class="modal__title">Заказ</h3>
+            <div id="order-modal-content"></div>
+            <div class="modal__actions">
+                <button id="order-modal-close" class="btn btn--ghost btn--dark" type="button">Закрыть</button>
+            </div>
+        </div>
+    </div>
 
     <div id="modal" class="modal" hidden>
         <div class="modal__window">
@@ -38,6 +66,7 @@
     </div>
     <div id="toast" class="toast" hidden></div>
 
+    <script src="./sql-wasm.js"></script>
     <script src="./db.js"></script>
     <script src="./app-orders.js"></script>
 </body>
