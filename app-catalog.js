@@ -7,10 +7,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('user-name').textContent = user.fullName;
 
     const prefs = store.getCatalogPrefs();
-    const searchInput = document.getElementById('search-input');
-    const filterStock = document.getElementById('filter-stock');
-    const sortSelect  = document.getElementById('sort-select');
-    const catalogBody = document.getElementById('catalog-body');
+    const searchInput  = document.getElementById('search-input');
+    const filterStock  = document.getElementById('filter-stock');
+    const sortSelect   = document.getElementById('sort-select');
+    const catalogBody  = document.getElementById('catalog-body');
     const catalogEmpty = document.getElementById('catalog-empty');
 
     searchInput.value = prefs.searchQuery;
@@ -72,6 +72,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         items.sort(sorters[sortKey] || sorters['code-asc']);
 
         catalogBody.innerHTML = '';
+
         if (items.length === 0) {
             catalogEmpty.hidden = false;
             return;
@@ -96,15 +97,42 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td>${formatPrice(item.finalPrice)}</td>
                 <td>${item.quantity}</td>
                 <td><span class="badge ${badgeClass}">${item.stockLabel}</span></td>
+                <td>
+                    <button class="btn btn--primary btn--small add-btn"
+                            data-code="${item.code}" type="button">В корзину</button>
+                </td>
             `;
-            tr.addEventListener('click', () => {
+
+            // Клик по строке (кроме кнопки) — переход в карточку товара
+            tr.addEventListener('click', e => {
+                if (e.target.classList.contains('add-btn')) return;
                 store.setSelectedProduct(item.code);
                 window.location.href = 'product.html';
             });
+
+            // Кнопка «В корзину» — быстрое добавление одной штуки
+            tr.querySelector('.add-btn').addEventListener('click', () => {
+                if (item.quantity < 1) {
+                    showModal('Нет в наличии',
+                        `«${item.name}» закончился на складе.`, 'warning');
+                    return;
+                }
+                store.addToCart({
+                    code: item.code,
+                    name: item.name,
+                    price: item.finalPrice,
+                    size: '—',
+                    quantity: 1
+                });
+                updateCartBadge();
+                showToast(`«${item.name}» добавлен в корзину`, 'success');
+            });
+
             catalogBody.appendChild(tr);
         });
     }
 
+    // Обработчики поиска / фильтра / сортировки — один раз, без дублей
     searchInput.addEventListener('input', e => {
         store.setCatalogPrefs({ ...store.getCatalogPrefs(), searchQuery: e.target.value });
         render();
@@ -118,22 +146,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         render();
     });
 
+    // Первый рендер
     render();
-        searchInput.addEventListener('input', e => {
-        store.setCatalogPrefs({ ...store.getCatalogPrefs(), searchQuery: e.target.value });
-        render();
-    });
-    filterStock.addEventListener('change', e => {
-        store.setCatalogPrefs({ ...store.getCatalogPrefs(), stockFilter: e.target.value });
-        render();
-    });
-    sortSelect.addEventListener('change', e => {
-        store.setCatalogPrefs({ ...store.getCatalogPrefs(), sortKey: e.target.value });
-        render();
-    });
-
-    render();
+    updateCartBadge();
 });
-});
-
-        
