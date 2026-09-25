@@ -25,10 +25,15 @@
             </div>
         </header>
 
-        <main class="app-main">
-            <h2 class="section__title">Каталог товаров</h2>
+                <main class="app-main">
+            <div class="section-head">
+                <h2 class="section__title">Каталог товаров</h2>
+                <button id="add-product-btn" class="btn btn--primary" type="button" hidden>
+                    + Добавить товар
+                </button>
+            </div>
 
-            <div class="toolbar">
+            <div class="toolbar" id="toolbar" hidden>
                 <input id="search-input" class="field__input" type="text"
                        placeholder="Поиск по названию...">
                 <select id="filter-stock" class="field__input">
