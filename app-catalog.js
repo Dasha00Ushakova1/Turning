@@ -13,27 +13,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     const isManager = store.isManager();
     const isAdmin   = store.isAdmin();
 
-    // Показ элементов управления по ролям
+    // Панель фильтров — только менеджеру/админу
     const toolbar = document.getElementById('toolbar');
     if (toolbar && isManager) toolbar.hidden = false;
 
+    // Кнопка «+ Добавить товар» — только админу
     const addProductBtn = document.getElementById('add-product-btn');
     if (addProductBtn && isAdmin) addProductBtn.hidden = false;
 
-    // Кнопки навигации
-    const logoutBtn = document.getElementById('logout-btn');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', () => {
-            store.clearUser();
-            window.location.href = 'index.html';
-        });
-    }
-    const gotoOrders = document.getElementById('goto-orders');
-    if (gotoOrders) {
-        gotoOrders.addEventListener('click', () => {
-            window.location.href = 'orders.html';
-        });
-    }
+    document.getElementById('logout-btn').addEventListener('click', () => {
+        store.clearUser();
+        window.location.href = 'index.html';
+    });
+    document.getElementById('goto-orders').addEventListener('click', () => {
+        window.location.href = 'orders.html';
+    });
 
     const searchInput  = document.getElementById('search-input');
     const filterStock  = document.getElementById('filter-stock');
@@ -48,9 +42,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (sortSelect)  sortSelect.value  = prefs.sortKey;
     }
 
-    /* ============================================================
-     * 1. Сначала — загрузка БД и подготовка данных
-     * ============================================================ */
+    /* ---------- Загрузка БД ---------- */
     let catalog = [];
     let db;
 
@@ -72,19 +64,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     } catch (error) {
         console.error('Ошибка загрузки БД:', error);
-        if (typeof showModal === 'function') {
-            showModal('Ошибка загрузки', error.message, 'error');
-        }
-        if (catalogBody) {
-            catalogBody.innerHTML =
-                `<tr><td colspan="7" class="data-table__empty">Не удалось загрузить данные</td></tr>`;
-        }
+        if (typeof showModal === 'function') showModal('Ошибка загрузки', error.message, 'error');
+        catalogBody.innerHTML =
+            `<tr><td colspan="7" class="data-table__empty">Не удалось загрузить данные</td></tr>`;
         return;
     }
 
-    /* ============================================================
-     * 2. Только теперь — функция рендера
-     * ============================================================ */
+    /* ---------- Рендер каталога ---------- */
     function render() {
         let items = [...catalog];
 
@@ -114,10 +100,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         catalogBody.innerHTML = '';
 
         if (items.length === 0) {
-            if (catalogEmpty) catalogEmpty.hidden = false;
+            catalogEmpty.hidden = false;
             return;
         }
-        if (catalogEmpty) catalogEmpty.hidden = true;
+        catalogEmpty.hidden = true;
 
         items.forEach(item => {
             const tr = document.createElement('tr');
@@ -140,11 +126,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 data-code="${item.code}" type="button">🗑</button>
                     </td>
                 `;
-            } else if (isManager) {
+            } else if (user.role === 'customer') {
                 actionsCell = `
                     <td>
-                        <button class="btn btn--primary btn--small add-btn"
-                                data-code="${item.code}" type="button">В корзину</button>
+                        <button class="btn btn--primary btn--small order-btn"
+                                data-code="${item.code}" type="button">Заказать</button>
                     </td>
                 `;
             }
@@ -159,6 +145,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 ${actionsCell}
             `;
 
+            // Клик по строке — открыть карточку (для менеджера и админа)
             if (isManager) {
                 tr.addEventListener('click', e => {
                     if (e.target.closest('button')) return;
@@ -167,31 +154,21 @@ document.addEventListener('DOMContentLoaded', async () => {
                 });
             }
 
+            // Клиент по кнопке «Заказать» идёт в карточку товара
+            if (user.role === 'customer') {
+                const orderBtn = tr.querySelector('.order-btn');
+                if (orderBtn) {
+                    orderBtn.addEventListener('click', () => {
+                        store.setSelectedProduct(item.code);
+                        window.location.href = 'product.html';
+                    });
+                }
+            }
+
             catalogBody.appendChild(tr);
         });
 
-        // Кнопки действий
-        if (isManager && !isAdmin) {
-            catalogBody.querySelectorAll('.add-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const item = catalog.find(i => i.code === Number(btn.dataset.code));
-                    if (!item || item.quantity < 1) {
-                        showModal('Нет в наличии', 'Товар закончился на складе.', 'warning');
-                        return;
-                    }
-                    store.addToCart({
-                        code: item.code,
-                        name: item.name,
-                        price: item.finalPrice,
-                        size: '—',
-                        quantity: 1
-                    });
-                    updateCartBadge();
-                    showToast(`«${item.name}» добавлен в корзину`, 'success');
-                });
-            });
-        }
-
+        // Кнопки редактирования/удаления — только админ
         if (isAdmin) {
             catalogBody.querySelectorAll('.edit-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
@@ -219,28 +196,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    /* ============================================================
-     * 3. Обработчики тулбара
-     * ============================================================ */
+    // Обработчики тулбара
     if (isManager) {
-        if (searchInput) {
-            searchInput.addEventListener('input', e => {
-                store.setCatalogPrefs({ ...store.getCatalogPrefs(), searchQuery: e.target.value });
-                render();
-            });
-        }
-        if (filterStock) {
-            filterStock.addEventListener('change', e => {
-                store.setCatalogPrefs({ ...store.getCatalogPrefs(), stockFilter: e.target.value });
-                render();
-            });
-        }
-        if (sortSelect) {
-            sortSelect.addEventListener('change', e => {
-                store.setCatalogPrefs({ ...store.getCatalogPrefs(), sortKey: e.target.value });
-                render();
-            });
-        }
+        searchInput.addEventListener('input', e => {
+            store.setCatalogPrefs({ ...store.getCatalogPrefs(), searchQuery: e.target.value });
+            render();
+        });
+        filterStock.addEventListener('change', e => {
+            store.setCatalogPrefs({ ...store.getCatalogPrefs(), stockFilter: e.target.value });
+            render();
+        });
+        sortSelect.addEventListener('change', e => {
+            store.setCatalogPrefs({ ...store.getCatalogPrefs(), sortKey: e.target.value });
+            render();
+        });
     }
 
     if (addProductBtn) {
@@ -249,9 +218,5 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    /* ============================================================
-     * 4. Первый рендер — данные уже готовы
-     * ============================================================ */
     render();
-    updateCartBadge();
 });
