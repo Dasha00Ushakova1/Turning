@@ -65,6 +65,16 @@ body {
     margin-top: 16px;
     line-height: 1.7;
 }
+.login-card__logo {
+    text-align: center;
+    margin-bottom: 16px;
+}
+.login-card__logo-img {
+    width: 96px;
+    height: 96px;
+    object-fit: contain;
+    border-radius: var(--radius);
+}
 
 /* ==============================================================
    4. ПОЛЯ ВВОДА
