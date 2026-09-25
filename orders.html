@@ -10,7 +10,7 @@
     <section class="screen screen--active">
         <header class="app-header">
             <button id="back-to-catalog" class="btn btn--ghost" type="button">← В каталог</button>
-            <h2 class="app-header__title">Заказы</h2>
+            <h2 id="page-title" class="app-header__title">Заказы</h2>
             <div class="user-box">
                 <span id="user-name" class="user-box__name"></span>
                 <span id="user-role" class="user-box__role"></span>
@@ -19,11 +19,8 @@
 
         <main class="app-main">
             <div class="toolbar">
-                <button id="new-order-btn" class="btn btn--primary" type="button" hidden>
-                    + Новый заказ
-                </button>
                 <input id="orders-search" class="field__input" type="text"
-                       placeholder="Поиск по ФИО клиента...">
+                       placeholder="Поиск...">
             </div>
 
             <table class="data-table">
@@ -31,7 +28,7 @@
                     <tr>
                         <th>Код</th>
                         <th>Дата</th>
-                        <th>Клиент</th>
+                        <th id="col-customer">Клиент</th>
                         <th>Состав</th>
                         <th>Сумма</th>
                         <th></th>
@@ -43,17 +40,6 @@
             <p id="orders-empty" class="data-table__empty" hidden>Заказов нет</p>
         </main>
     </section>
-
-    <!-- Модальное окно: состав заказа -->
-    <div id="order-modal" class="modal" hidden>
-        <div class="modal__window modal__window--wide">
-            <h3 id="order-modal-title" class="modal__title">Заказ</h3>
-            <div id="order-modal-content"></div>
-            <div class="modal__actions">
-                <button id="order-modal-close" class="btn btn--ghost btn--dark" type="button">Закрыть</button>
-            </div>
-        </div>
-    </div>
 
     <div id="modal" class="modal" hidden>
         <div class="modal__window">
