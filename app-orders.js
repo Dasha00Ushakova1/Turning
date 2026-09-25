@@ -29,5 +29,6 @@ document.addEventListener('DOMContentLoaded', () => {
             <td>${composition}</td>
             <td>${formatPrice(o.total)}</td>
         `;
-        body.appendChild(tr);
+               body.appendChild(tr);
     });
+});
