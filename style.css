@@ -1,6 +1,6 @@
-/* ==============================
-   Переменные и сброс
-   ============================== */
+/* ==============================================================
+   1. ПЕРЕМЕННЫЕ И СБРОС
+   ============================================================== */
 :root {
     --color-primary: #2c3e50;
     --color-accent: #3498db;
@@ -24,26 +24,6 @@
     margin: 0;
     padding: 0;
 }
-.user-box__role {
-    color: rgba(255,255,255,0.7);
-    font-size: 13px;
-    margin-left: 6px;
-}
-.modal__window--wide {
-    max-width: 720px;
-    width: 95%;
-}
-.order-card__row {
-    margin: 8px 0;
-}
-.order-card__subtitle {
-    margin: 16px 0 8px;
-    color: var(--color-primary);
-}
-.order-card__total {
-    margin-top: 16px;
-    font-size: 17px;
-}
 
 body {
     font-family: var(--font-main);
@@ -56,15 +36,19 @@ body {
     flex-direction: column;
 }
 
-/* ==============================
-   Экраны
-   ============================== */
+[hidden] {
+    display: none !important;
+}
+
+/* ==============================================================
+   2. ЭКРАНЫ
+   ============================================================== */
 .screen { display: none; }
 .screen--active { display: block; }
 
-/* ==============================
-   Экран входа
-   ============================== */
+/* ==============================================================
+   3. ЭКРАН ВХОДА
+   ============================================================== */
 .login-card {
     max-width: 400px;
     margin: 80px auto;
@@ -75,11 +59,16 @@ body {
 }
 .login-card__title { color: var(--color-primary); margin-bottom: 8px; }
 .login-card__subtitle { color: var(--color-text-muted); margin-bottom: 24px; }
-.login-card__hint { font-size: 13px; color: var(--color-text-muted); margin-top: 16px; }
+.login-card__hint {
+    font-size: 13px;
+    color: var(--color-text-muted);
+    margin-top: 16px;
+    line-height: 1.7;
+}
 
-/* ==============================
-   Поля
-   ============================== */
+/* ==============================================================
+   4. ПОЛЯ ВВОДА
+   ============================================================== */
 .field { display: block; margin-bottom: 16px; }
 .field__label { display: block; margin-bottom: 4px; font-weight: 500; }
 .field__input {
@@ -89,13 +78,22 @@ body {
     border-radius: var(--radius);
     font-family: inherit;
     font-size: 15px;
+    background: #fff;
 }
-.field__input:focus { outline: 2px solid var(--color-accent); border-color: transparent; }
-.field__error { color: #e74c3c; font-size: 13px; display: block; margin-top: 4px; }
+.field__input:focus {
+    outline: 2px solid var(--color-accent);
+    border-color: transparent;
+}
+.field__error {
+    color: #e74c3c;
+    font-size: 13px;
+    display: block;
+    margin-top: 4px;
+}
 
-/* ==============================
-   Кнопки
-   ============================== */
+/* ==============================================================
+   5. КНОПКИ
+   ============================================================== */
 .btn {
     display: inline-block;
     padding: 10px 18px;
@@ -106,15 +104,16 @@ body {
     cursor: pointer;
     transition: filter 0.15s, background 0.15s;
     text-decoration: none;
+    text-align: center;
 }
 .btn:hover { filter: brightness(0.95); }
 .btn--primary { background: var(--color-accent); color: #fff; }
 .btn--ghost {
     background: transparent;
     color: #fff;
-    border: 1px solid rgba(255,255,255,0.5);
+    border: 1px solid rgba(255, 255, 255, 0.5);
 }
-.btn--ghost:hover { background: rgba(255,255,255,0.1); }
+.btn--ghost:hover { background: rgba(255, 255, 255, 0.1); }
 .btn--dark {
     color: var(--color-primary);
     border-color: var(--color-border);
@@ -122,9 +121,9 @@ body {
 .btn--dark:hover { background: rgba(44, 62, 80, 0.06); }
 .btn--small { padding: 6px 12px; font-size: 13px; }
 
-/* ==============================
-   Шапка
-   ============================== */
+/* ==============================================================
+   6. ШАПКА
+   ============================================================== */
 .app-header {
     background-color: var(--color-primary);
     color: #fff;
@@ -134,108 +133,13 @@ body {
     align-items: center;
     box-shadow: var(--shadow);
     gap: 16px;
-}
-/* ==============================
-   Карточка заказа
-   ============================== */
-.order-card {
-    background: #fff;
-    padding: 24px;
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-}
-.order-card__header {
-    border-bottom: 1px solid var(--color-border);
-    padding-bottom: 12px;
-    margin-bottom: 16px;
-}
-.order-card__row {
-    margin: 6px 0;
-}
-.order-card__subtitle {
-    margin: 16px 0 12px;
-    font-size: 17px;
-    color: var(--color-primary);
-}
-.order-card__footer {
-    margin-top: 20px;
-    padding-top: 16px;
-    border-top: 1px solid var(--color-border);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 16px;
     flex-wrap: wrap;
-}
-.order-card__total {
-    font-size: 18px;
-}
-
-/* Позиции заказа */
-.order-items {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-.order-item {
-    display: grid;
-    grid-template-columns: 120px 1fr auto;
-    gap: 16px;
-    align-items: center;
-    padding: 12px;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius);
-    background: #fafbfc;
-}
-.order-item__image {
-    width: 120px;
-    height: 120px;
-    object-fit: cover;
-    border-radius: var(--radius);
-    background: #eee;
-}
-.order-item__body {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-.order-item__title {
-    font-size: 16px;
-    color: var(--color-primary);
-    margin-bottom: 4px;
-}
-.order-item__desc {
-    color: var(--color-text-muted);
-    font-size: 13px;
-    margin-bottom: 6px;
-}
-.order-item__row {
-    font-size: 14px;
-}
-.order-item__actions {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-@media (max-width: 640px) {
-    .order-item {
-        grid-template-columns: 1fr;
-    }
-    .order-item__image {
-        width: 100%;
-        height: auto;
-        max-height: 200px;
-    }
-    .order-item__actions {
-        flex-direction: row;
-    }
 }
 .logo {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding-left: 52px;              /* место под логотип */
+    padding-left: 52px;
     position: relative;
     min-height: 40px;
 }
@@ -256,23 +160,17 @@ body {
 .logo__title { font-size: 20px; font-weight: 600; letter-spacing: 0.5px; }
 .app-header__title { color: #fff; font-size: 18px; }
 
-.user-box { display: flex; align-items: center; gap: 12px; }
+.user-box { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .user-box__name { color: #fff; font-weight: 500; }
-
-.app-nav__list { list-style: none; display: flex; gap: 24px; }
-.app-nav__link {
-    color: #fff;
-    text-decoration: none;
-    font-weight: 500;
-    padding: 6px 4px;
-    border-bottom: 2px solid transparent;
-    transition: border-color 0.2s;
+.user-box__role {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 13px;
+    margin-left: 6px;
 }
-.app-nav__link:hover { border-bottom-color: var(--color-accent); }
 
-/* ==============================
-   Основная часть
-   ============================== */
+/* ==============================================================
+   7. ОСНОВНАЯ ЧАСТЬ
+   ============================================================== */
 .app-main {
     flex: 1;
     padding: 32px;
@@ -289,10 +187,20 @@ body {
     border-left: 4px solid var(--color-accent);
     padding-left: 12px;
 }
+.section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+.section-head .section__title { margin-bottom: 0; }
 
-/* ==============================
-   Таблицы
-   ============================== */
+/* ==============================================================
+   8. ТАБЛИЦЫ
+   ============================================================== */
+.table-wrap { width: 100%; overflow-x: auto; }
 .data-table {
     width: 100%;
     border-collapse: collapse;
@@ -300,6 +208,7 @@ body {
     border-radius: var(--radius);
     overflow: hidden;
     box-shadow: var(--shadow);
+    min-width: 640px;
 }
 .data-table__head {
     background-color: var(--color-primary);
@@ -310,10 +219,12 @@ body {
     padding: 12px 16px;
     font-weight: 600;
     font-size: 14px;
+    white-space: nowrap;
 }
 .data-table__body td {
     padding: 12px 16px;
     border-bottom: 1px solid var(--color-border);
+    vertical-align: middle;
 }
 .data-table__body tr:last-child td { border-bottom: none; }
 .data-table__body tr:hover { background-color: #f9fbfc; }
@@ -322,27 +233,16 @@ body {
     color: var(--color-text-muted);
     padding: 24px;
 }
-
 .data-table__row--low {
     background-color: var(--color-low-stock);
     border-left: 4px solid var(--color-low-stock-border);
 }
-.section-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    margin-bottom: 16px;
-}
-.section-head .section__title {
-    margin-bottom: 0;
-}
-.row-actions {
-    display: flex;
-    gap: 6px;
-}
 
-/* Бейджи */
+.row-actions { display: flex; gap: 6px; }
+
+/* ==============================================================
+   9. БЕЙДЖИ
+   ============================================================== */
 .badge {
     display: inline-block;
     padding: 2px 10px;
@@ -350,24 +250,30 @@ body {
     font-size: 12px;
     font-weight: 600;
     color: #fff;
+    white-space: nowrap;
 }
 .badge--many { background-color: var(--color-many); }
 .badge--few { background-color: var(--color-few); }
 
-/* ==============================
-   Панель поиска/фильтра/сортировки
-   ============================== */
+/* ==============================================================
+   10. ПАНЕЛЬ ПОИСКА/ФИЛЬТРА/СОРТИРОВКИ
+   ============================================================== */
 .toolbar {
     display: flex;
     gap: 12px;
     margin-bottom: 16px;
     flex-wrap: wrap;
 }
-.toolbar .field__input { width: auto; min-width: 180px; }
+.toolbar .field__input {
+    width: auto;
+    min-width: 180px;
+    flex: 1 1 180px;
+    max-width: 280px;
+}
 
-/* ==============================
-   Карточка товара
-   ============================== */
+/* ==============================================================
+   11. КАРТОЧКА ТОВАРА
+   ============================================================== */
 .product {
     display: grid;
     grid-template-columns: 300px 1fr;
@@ -392,11 +298,16 @@ body {
 }
 .size-option input { display: none; }
 .size-option input:checked + span { color: var(--color-accent); font-weight: 600; }
-.product__actions { margin-top: 24px; display: flex; gap: 12px; flex-wrap: wrap; }
+.product__actions {
+    margin-top: 24px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
 
-/* ==============================
-   Корзина
-   ============================== */
+/* ==============================================================
+   12. КОРЗИНА (на случай, если понадобится)
+   ============================================================== */
 .cart-link {
     display: inline-flex;
     align-items: center;
@@ -414,81 +325,258 @@ body {
     font-weight: 600;
     text-align: center;
 }
-.cart-summary {
-    margin-top: 24px;
+
+/* ==============================================================
+   13. КАРТОЧКА ЗАКАЗА
+   ============================================================== */
+.order-card {
+    background: #fff;
+    padding: 24px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+}
+.order-card__header {
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+}
+.order-card__row { margin: 6px 0; }
+.order-card__subtitle {
+    margin: 16px 0 12px;
+    font-size: 17px;
+    color: var(--color-primary);
+}
+.order-card__footer {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--color-border);
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 16px;
     flex-wrap: wrap;
-    background: #fff;
-    padding: 20px 24px;
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
 }
-.cart-summary__row {
-    font-size: 18px;
-    display: flex;
-    gap: 12px;
-    align-items: baseline;
-}
-.cart-summary__actions { display: flex; gap: 12px; }
+.order-card__total { font-size: 18px; }
 
-/* ==============================
-   Модальное окно и тост
-   ============================== */
+.order-items {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.order-item {
+    display: grid;
+    grid-template-columns: 120px 1fr auto;
+    gap: 16px;
+    align-items: center;
+    padding: 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: #fafbfc;
+}
+.order-item__image {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: var(--radius);
+    background: #eee;
+}
+.order-item__body { display: flex; flex-direction: column; gap: 2px; }
+.order-item__title {
+    font-size: 16px;
+    color: var(--color-primary);
+    margin-bottom: 4px;
+}
+.order-item__desc {
+    color: var(--color-text-muted);
+    font-size: 13px;
+    margin-bottom: 6px;
+}
+.order-item__row { font-size: 14px; }
+.order-item__actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* ==============================================================
+   14. МОДАЛЬНОЕ ОКНО И ТОСТ
+   ============================================================== */
 .modal {
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.5);
-    display: none;                    /* скрыто по умолчанию */
+    display: none;
     align-items: center;
     justify-content: center;
     z-index: 100;
+    padding: 16px;
 }
-.modal.modal--visible {
-    display: flex;                    /* показывается только с этим классом */
-}
-.modal[hidden] {
-    display: none !important;
-}
+.modal.modal--visible { display: flex; }
+.modal[hidden] { display: none !important; }
 .modal__window {
     background: #fff;
     padding: 24px;
     border-radius: var(--radius);
     max-width: 420px;
-    width: 90%;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    width: 100%;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
 }
+.modal__window--wide { max-width: 720px; }
 .modal__title { margin-bottom: 12px; color: var(--color-primary); }
 .modal__text { margin-bottom: 20px; color: var(--color-text); }
 .modal__actions { text-align: right; }
 
 .toast {
     position: fixed;
-    bottom: 24px; right: 24px;
+    bottom: 24px;
+    right: 24px;
     padding: 12px 20px;
     border-radius: var(--radius);
     background: var(--color-primary);
     color: #fff;
     box-shadow: var(--shadow);
     z-index: 200;
+    max-width: calc(100vw - 48px);
 }
 .toast--success { background: #27ae60; }
 .toast--error { background: #e74c3c; }
 
-/* ==============================
-   Подвал
-   ============================== */
+/* ==============================================================
+   15. ПОДВАЛ
+   ============================================================== */
 .app-footer {
     text-align: center;
     padding: 16px;
     color: var(--color-text-muted);
     font-size: 13px;
 }
-/* ==============================
-   Принудительно скрываем скрытое
-   ============================== */
-[hidden] {
-    display: none !important;
+
+/* ==============================================================
+   16. ПЛАНШЕТЫ (≤ 900px)
+   ============================================================== */
+@media (max-width: 900px) {
+    .app-main { padding: 24px 16px; }
+
+    .product {
+        grid-template-columns: 220px 1fr;
+        gap: 20px;
+        padding: 16px;
+    }
+    .product__image { max-width: 220px; }
+
+    .order-item {
+        grid-template-columns: 100px 1fr auto;
+        gap: 12px;
+    }
+    .order-item__image { width: 100px; height: 100px; }
+}
+
+/* ==============================================================
+   17. МОБИЛЬНЫЕ (≤ 640px)
+   ============================================================== */
+@media (max-width: 640px) {
+    body { font-size: 14px; }
+
+    /* Шапка */
+    .app-header {
+        padding: 12px 16px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+    .logo {
+        padding-left: 46px;
+        min-height: 36px;
+    }
+    .logo::before { width: 36px; height: 36px; }
+    .logo__title { font-size: 18px; }
+
+    .app-header__title { font-size: 16px; text-align: center; }
+    .user-box {
+        justify-content: space-between;
+        gap: 8px;
+    }
+    .user-box__name { font-size: 14px; }
+
+    /* Кнопки в шапке — компактнее */
+    .app-header .btn { padding: 8px 12px; font-size: 13px; }
+
+    /* Основная часть */
+    .app-main { padding: 16px 12px; }
+    .section { margin-bottom: 24px; }
+    .section__title { font-size: 18px; }
+
+    /* Таблицы — горизонтальный скролл */
+    .table-wrap {
+        overflow-x: auto;
+        margin: 0 -12px;
+        padding: 0 12px;
+    }
+    .data-table { min-width: 560px; }
+    .data-table__head th,
+    .data-table__body td {
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+
+    /* Toolbar */
+    .toolbar { flex-direction: column; }
+    .toolbar .field__input {
+        max-width: none;
+        min-width: 0;
+        flex: 1 1 auto;
+        width: 100%;
+    }
+
+    /* Карточка товара — одна колонка */
+    .product {
+        grid-template-columns: 1fr;
+        gap: 16px;
+        padding: 16px;
+    }
+    .product__image { max-width: 100%; }
+    .product__name { font-size: 18px; }
+    .product__actions { flex-direction: column; }
+    .product__actions .btn { width: 100%; }
+
+    /* Карточка заказа */
+    .order-card { padding: 16px; }
+    .order-item {
+        grid-template-columns: 1fr;
+        align-items: stretch;
+        text-align: left;
+    }
+    .order-item__image {
+        width: 100%;
+        height: auto;
+        max-height: 220px;
+    }
+    .order-item__actions { flex-direction: row; flex-wrap: wrap; }
+    .order-item__actions .btn { flex: 1 1 auto; }
+
+    /* Модалки */
+    .modal { padding: 12px; }
+    .modal__window { padding: 18px; }
+    .modal__actions { text-align: center; }
+    .modal__actions .btn { width: 100%; }
+
+    /* Toast */
+    .toast {
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+        max-width: none;
+        text-align: center;
+    }
+}
+
+/* ==============================================================
+   18. ОЧЕНЬ УЗКИЕ ЭКРАНЫ (≤ 380px)
+   ============================================================== */
+@media (max-width: 380px) {
+    .logo__title { font-size: 16px; }
+    .section__title { font-size: 16px; }
+    .btn { padding: 8px 14px; font-size: 13px; }
+    .data-table__head th,
+    .data-table__body td { padding: 8px 10px; font-size: 12px; }
 }
