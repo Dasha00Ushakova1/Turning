@@ -97,7 +97,9 @@ const store = {
         this.setCart(cart);
     },
     removeFromCart(code, size) {
-        this.setCart(this.getCart().filter(c => !(c.code === code && c.size === size)));
+        this.setCart(
+            this.getCart().filter(c => !(c.code === code && c.size === size))
+        );
     },
     updateCartQuantity(code, size, quantity) {
         const cart = this.getCart();
@@ -135,14 +137,18 @@ async function loadDatabase() {
 
 /**
  * Выполняет SQL-запрос и возвращает массив объектов { columnName: value }.
+ * @param {object} db
+ * @param {string} sql
+ * @returns {Array<Object>}
  */
 function query(db, sql) {
     const res = db.exec(sql);
     if (!res || res.length === 0) return [];
+
     const { columns, values } = res[0];
     return values.map(row => {
         const obj = {};
-        columns.forEach((c, i) => obj[c] = row[i]);
+        columns.forEach((c, i) => { obj[c] = row[i]; });
         return obj;
     });
 }
@@ -192,15 +198,22 @@ function ensureUiHelpers() {
     const modalText = document.getElementById('modal-text');
     const modalOk = document.getElementById('modal-ok');
 
-    modalOk.addEventListener('click', () => { modal.hidden = true; });
+    modalOk.addEventListener('click', () => {
+        modal.classList.remove('modal--visible');
+        modal.hidden = true;
+    });
     modal.addEventListener('click', e => {
-        if (e.target === modal) modal.hidden = true;
+        if (e.target === modal) {
+            modal.classList.remove('modal--visible');
+            modal.hidden = true;
+        }
     });
 
     window.showModal = function (title, text, type = 'info') {
         const icons = { info: 'ℹ️', warning: '⚠️', error: '⛔' };
         modalTitle.textContent = `${icons[type]} ${title}`;
         modalText.textContent = text;
+        modal.classList.add('modal--visible');
         modal.hidden = false;
     };
 
@@ -221,6 +234,7 @@ function ensureUiHelpers() {
 function updateCartBadge() {
     const badge = document.getElementById('cart-count');
     if (!badge) return;
+
     const count = store.getCartCount();
     badge.textContent = count;
     badge.hidden = count === 0;
