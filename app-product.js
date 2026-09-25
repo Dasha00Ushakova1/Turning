@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const mode = params.get('mode') || 'view';
     const isAdmin = store.isAdmin();
 
+    /* ---------- Загрузка БД ---------- */
     let db;
     try {
         db = await loadDatabase();
@@ -20,11 +21,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
+    /* ---------- Режим «Создание» — только для админа ---------- */
     if (mode === 'create' && isAdmin) {
         renderCreateForm(db);
         return;
     }
 
+    /* ---------- Режим «Просмотр / Редактирование» ---------- */
     const code = store.getSelectedProduct();
     if (!code) {
         window.location.href = 'catalog.html';
@@ -34,11 +37,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     const rows = query(db, `SELECT * FROM Products WHERE Product_Code = ${code}`);
     if (rows.length === 0) {
         showModal('Товар не найден', 'Возможно, он был удалён.', 'error');
+        setTimeout(() => { window.location.href = 'catalog.html'; }, 1500);
         return;
     }
 
     const p = rows[0];
     const { finalPrice, discountPercent } = calculateDiscount(p.Price, p.Quantity);
+
     const product = {
         code: p.Product_Code,
         name: p.Product_Name,
@@ -46,7 +51,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         quantity: p.Quantity,
         finalPrice,
         discountPercent,
-        stockLabel: getStockLabel(p.Quantity)
+        stockLabel: getStockLabel(p.Quantity),
+        imageUrl: p.Image_URL || null,
+        description: p.Description || null
     };
 
     if (mode === 'edit' && isAdmin) {
@@ -60,9 +67,16 @@ document.addEventListener('DOMContentLoaded', async () => {
  * Просмотр товара
  * ============================================================ */
 function renderView(db, product, user) {
-    const sizes = query(db,
-        `SELECT Size FROM Product_Sizes WHERE Product_Code = ${product.code}`
-    ).map(r => r.Size);
+    /* Размеры: таблицы Product_Sizes может не быть — не падаем */
+    let sizes = [];
+    try {
+        sizes = query(db,
+            `SELECT Size FROM Product_Sizes WHERE Product_Code = ${product.code}`
+        ).map(r => r.Size);
+    } catch (e) {
+        console.warn('Таблица Product_Sizes недоступна:', e.message);
+        sizes = [];
+    }
 
     const sizesHtml = sizes.length
         ? `<div class="product__sizes">${sizes.map((s, i) =>
@@ -72,7 +86,11 @@ function renderView(db, product, user) {
               </label>`).join('')}</div>`
         : '<p class="product__no-sizes">Размеры не указаны</p>';
 
-    // Кнопка заказа — только у клиента
+    const imageUrl = product.imageUrl
+        || `https://placehold.co/300x300?text=${encodeURIComponent(product.name)}`;
+
+    const description = product.description || product.name;
+
     const actionsHtml = user.role === 'customer'
         ? `
             <div class="product__actions">
@@ -87,16 +105,19 @@ function renderView(db, product, user) {
         `;
 
     document.getElementById('product-details').innerHTML = `
-        <img class="product__image"
-             src="https://placehold.co/300x300?text=${encodeURIComponent(product.name)}"
-             alt="${product.name}">
+        <img class="product__image" src="${imageUrl}" alt="${product.name}">
         <div class="product__info">
             <h2 class="product__name">${product.name}</h2>
+            <p class="product__desc">${description}</p>
+
             <p class="product__row"><b>Цена:</b> ${formatPrice(product.price)}</p>
             <p class="product__row"><b>Цена со скидкой:</b> ${formatPrice(product.finalPrice)}
                 ${product.discountPercent > 0 ? `<small>(-${product.discountPercent}%)</small>` : ''}</p>
             <p class="product__row"><b>Доступно:</b> ${product.quantity} шт.
-                <span class="badge ${product.stockLabel === 'много' ? 'badge--many' : 'badge--few'}">${product.stockLabel}</span></p>
+                <span class="badge ${product.stockLabel === 'много' ? 'badge--many' : 'badge--few'}">
+                    ${product.stockLabel}
+                </span>
+            </p>
 
             <h3 class="product__section">Размер</h3>
             ${sizesHtml}
@@ -117,6 +138,7 @@ function renderView(db, product, user) {
 
     if (user.role !== 'customer') return;
 
+    /* ---------- Валидация и оформление заказа (только для клиента) ---------- */
     const quantityInput = document.getElementById('product-quantity');
     const quantityError = document.getElementById('quantity-error');
 
@@ -175,7 +197,7 @@ function renderView(db, product, user) {
 }
 
 /* ============================================================
- * Редактирование (админ)
+ * Редактирование (только админ)
  * ============================================================ */
 function renderEditForm(db, product) {
     document.getElementById('product-details').innerHTML = `
@@ -216,8 +238,12 @@ function renderEditForm(db, product) {
             showModal('Ошибка', 'Название не может быть пустым.', 'warning');
             return;
         }
-        if (!(price >= 0) || !Number.isInteger(quantity) || quantity < 0) {
-            showModal('Ошибка', 'Проверьте цену и количество.', 'warning');
+        if (!(price >= 0)) {
+            showModal('Ошибка', 'Цена должна быть неотрицательным числом.', 'warning');
+            return;
+        }
+        if (!Number.isInteger(quantity) || quantity < 0) {
+            showModal('Ошибка', 'Количество должно быть целым неотрицательным числом.', 'warning');
             return;
         }
 
@@ -239,7 +265,7 @@ function renderEditForm(db, product) {
 }
 
 /* ============================================================
- * Создание (админ)
+ * Создание (только админ)
  * ============================================================ */
 function renderCreateForm(db) {
     const nextCode = (query(db, 'SELECT MAX(Product_Code) AS m FROM Products')[0]?.m || 0) + 1;
@@ -250,7 +276,8 @@ function renderCreateForm(db) {
 
             <label class="field">
                 <span class="field__label">Название</span>
-                <input id="edit-name" class="field__input" type="text">
+                <input id="edit-name" class="field__input" type="text"
+                       placeholder="Например, Синие перчатки">
             </label>
             <label class="field">
                 <span class="field__label">Цена, ₽</span>
@@ -299,7 +326,9 @@ function renderCreateForm(db) {
     });
 }
 
-/** Генерирует следующий номер заказа. */
+/* ============================================================
+ * Утилита: следующий код заказа
+ * ============================================================ */
 function generateOrderCode(db) {
     const local = store.getOrders().reduce((m, o) => Math.max(m, o.code), 0);
     const fromDb = query(db, 'SELECT MAX(Order_Code) AS m FROM Orders')[0]?.m || 0;
