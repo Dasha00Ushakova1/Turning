@@ -155,7 +155,63 @@ body {
     font-weight: 600;
     color: #fff;
 }
+/* Маленькая кнопка */
+.btn--small {
+    padding: 6px 12px;
+    font-size: 13px;
+}
 
+/* Тёмная ghost-кнопка (для светлого фона) */
+.btn--dark {
+    color: var(--color-primary);
+    border-color: var(--color-border);
+}
+.btn--dark:hover {
+    background: rgba(44, 62, 80, 0.06);
+}
+
+/* Ссылка «Корзина» с бейджем */
+.cart-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+}
+.cart-badge {
+    display: inline-block;
+    min-width: 20px;
+    padding: 1px 6px;
+    border-radius: 10px;
+    background: var(--color-accent);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+}
+
+/* Итог по корзине */
+.cart-summary {
+    margin-top: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    background: #fff;
+    padding: 20px 24px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+}
+.cart-summary__row {
+    font-size: 18px;
+    display: flex;
+    gap: 12px;
+    align-items: baseline;
+}
+.cart-summary__actions {
+    display: flex;
+    gap: 12px;
+}
 .badge--many {
     background-color: var(--color-many);
 }
