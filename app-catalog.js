@@ -120,3 +120,53 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     render();
 });
+        items.forEach(item => {
+            const tr = document.createElement('tr');
+            tr.className = item.quantity < CONFIG.lowStockThreshold
+                ? 'data-table__row--low' : '';
+
+            const priceCell = item.discountPercent > 0
+                ? `${formatPrice(item.price)} <small>(-${item.discountPercent}%)</small>`
+                : formatPrice(item.price);
+
+            const badgeClass = item.stockLabel === 'много' ? 'badge--many' : 'badge--few';
+
+            tr.innerHTML = `
+                <td>${item.code}</td>
+                <td>${item.name}</td>
+                <td>${priceCell}</td>
+                <td>${formatPrice(item.finalPrice)}</td>
+                <td>${item.quantity}</td>
+                <td><span class="badge ${badgeClass}">${item.stockLabel}</span></td>
+                <td>
+                    <button class="btn btn--primary btn--small add-btn"
+                            data-code="${item.code}" type="button">В корзину</button>
+                </td>
+            `;
+
+            tr.addEventListener('click', e => {
+                if (e.target.classList.contains('add-btn')) return;
+                store.setSelectedProduct(item.code);
+                window.location.href = 'product.html';
+            });
+
+            
+            tr.querySelector('.add-btn').addEventListener('click', () => {
+                if (item.quantity < 1) {
+                    showModal('Нет в наличии',
+                        `«${item.name}» закончился на складе.`, 'warning');
+                    return;
+                }
+                store.addToCart({
+                    code: item.code,
+                    name: item.name,
+                    price: item.finalPrice,
+                    size: '—',
+                    quantity: 1
+                });
+                updateCartBadge();
+                showToast(`«${item.name}» добавлен в корзину`, 'success');
+            });
+
+            catalogBody.appendChild(tr);
+        });
