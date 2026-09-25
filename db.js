@@ -197,5 +197,12 @@ function ensureUiHelpers() {
     getCartCount() {
         return this.getCart().reduce((sum, item) => sum + item.quantity, 0);
     }
+function updateCartBadge() {
+    const badge = document.getElementById('cart-count');
+    if (!badge) return;
+    const count = store.getCartCount();
+    badge.textContent = count;
+    badge.hidden = count === 0;
+}
 
 document.addEventListener('DOMContentLoaded', ensureUiHelpers);
