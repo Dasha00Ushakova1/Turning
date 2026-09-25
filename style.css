@@ -327,3 +327,9 @@ body {
     color: var(--color-text-muted);
     font-size: 13px;
 }
+/* ==============================
+   Принудительно скрываем скрытое
+   ============================== */
+[hidden] {
+    display: none !important;
+}
