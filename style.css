@@ -24,6 +24,26 @@
     margin: 0;
     padding: 0;
 }
+.user-box__role {
+    color: rgba(255,255,255,0.7);
+    font-size: 13px;
+    margin-left: 6px;
+}
+.modal__window--wide {
+    max-width: 720px;
+    width: 95%;
+}
+.order-card__row {
+    margin: 8px 0;
+}
+.order-card__subtitle {
+    margin: 16px 0 8px;
+    color: var(--color-primary);
+}
+.order-card__total {
+    margin-top: 16px;
+    font-size: 17px;
+}
 
 body {
     font-family: var(--font-main);
