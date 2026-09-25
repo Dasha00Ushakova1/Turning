@@ -117,7 +117,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         render();
     });
 
-    document.getElementById('checkout-btn').addEventListener('click', () => {
+       document.getElementById('checkout-btn').addEventListener('click', () => {
         const cart = store.getCart();
         if (cart.length === 0) {
             showModal('Корзина пуста',
@@ -125,16 +125,34 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        // Проверяем каждую позицию на доступность
-        for (const item of cart) {
-            const available = getAvailableQuantity(item.code);
-            if (item.quantity > available) {
-                showModal('Недостаточно товара',
-                    `«${item.name}»: на складе ${available} шт., а в корзине ${item.quantity}.`,
-                    'warning');
-                return;
-            }
+        // Если менеджер добавляет позиции в существующий заказ
+        const addingTo = localStorage.getItem('addingToOrder');
+        if (addingTo) {
+            const orderCode = Number(addingTo);
+            cart.forEach(i => {
+                store.addOrderItem(orderCode, {
+                    productCode: i.code,
+                    productName: i.name,
+                    size: i.size,
+                    quantity: i.quantity,
+                    price: i.price
+                });
+            });
+            store.clearCart();
+            localStorage.removeItem('addingToOrder');
+            updateCartBadge();
+
+            showModal('Позиции добавлены',
+                `В заказ №${orderCode} добавлено ${cart.length} позиц.`, 'info');
+            document.getElementById('modal-ok').addEventListener('click', () => {
+                window.location.href = 'orders.html';
+            }, { once: true });
+            return;
         }
+
+        // Обычное оформление нового заказа (как было)
+        // ... ваш существующий код ...
+    });
 
         const orderCode = generateOrderCode(db);
         const order = {
