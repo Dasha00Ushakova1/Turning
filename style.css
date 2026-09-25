@@ -135,7 +135,27 @@ body {
     box-shadow: var(--shadow);
     gap: 16px;
 }
-.logo { display: flex; align-items: center; gap: 12px; }
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-left: 52px;              /* место под логотип */
+    position: relative;
+    min-height: 40px;
+}
+.logo::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    background-image: url('./2e4b17e6-a650-4c03-99dc-bf0ad6f6be9b.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
 .logo__image { width: 40px; height: 40px; }
 .logo__title { font-size: 20px; font-weight: 600; letter-spacing: 0.5px; }
 .app-header__title { color: #fff; font-size: 18px; }
