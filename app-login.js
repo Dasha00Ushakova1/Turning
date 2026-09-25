@@ -14,8 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const fullName = USERS[login];
-        if (!fullName) {
+                const user = USERS[login];
+        if (!user) {
             error.textContent = 'Пользователь с таким логином не найден';
             if (typeof showModal === 'function') {
                 showModal(
@@ -26,6 +26,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             return;
         }
+
+        error.textContent = '';
+        store.setUser({ login, fullName: user.fullName, role: user.role });
+        window.location.href = 'catalog.html';
 
         error.textContent = '';
         store.setUser({ login, fullName });
