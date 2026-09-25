@@ -3,47 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Turning Shop — Корзина</title>
+    <title>Turning Shop — Каталог</title>
     <link rel="stylesheet" href="./style.css">
 </head>
 <body>
     <section class="screen screen--active">
         <header class="app-header">
-            <button id="back-to-catalog" class="btn btn--ghost" type="button">← В каталог</button>
-            <h2 class="app-header__title">Корзина</h2>
-            <span id="user-name" class="user-box__name"></span>
+            <div class="logo">
+                <h1 class="logo__title">Turning Shop</h1>
+            </div>
+            <div class="user-box">
+                <span id="user-name" class="user-box__name"></span>
+                <span id="user-role" class="user-box__role"></span>
+                <a href="cart.html" class="btn btn--ghost cart-link">
+                    🛒 Корзина <span id="cart-count" class="cart-badge" hidden>0</span>
+                </a>
+                <button id="goto-orders" class="btn btn--ghost" type="button">Заказы</button>
+                <button id="logout-btn" class="btn btn--ghost" type="button">Выйти</button>
+            </div>
         </header>
 
         <main class="app-main">
-            <table class="data-table" id="cart-table">
+            <div class="section-head">
+                <h2 class="section__title">Каталог товаров</h2>
+                <button id="add-product-btn" class="btn btn--primary" type="button" hidden>
+                    + Добавить товар
+                </button>
+            </div>
+
+            <!-- Панель поиска/фильтра/сортировки — только для менеджера и админа -->
+            <div class="toolbar" id="toolbar" hidden>
+                <input id="search-input" class="field__input" type="text"
+                       placeholder="Поиск по названию...">
+                <select id="filter-stock" class="field__input">
+                    <option value="all">Все товары</option>
+                    <option value="many">Только «много»</option>
+                    <option value="few">Только «мало»</option>
+                </select>
+                <select id="sort-select" class="field__input">
+                    <option value="code-asc">Код ↑</option>
+                    <option value="code-desc">Код ↓</option>
+                    <option value="name-asc">Название А→Я</option>
+                    <option value="name-desc">Название Я→А</option>
+                    <option value="price-asc">Цена ↑</option>
+                    <option value="price-desc">Цена ↓</option>
+                    <option value="qty-asc">Количество ↑</option>
+                    <option value="qty-desc">Количество ↓</option>
+                </select>
+            </div>
+
+            <table class="data-table">
                 <thead class="data-table__head">
-                    <tr>
+                    <tr id="catalog-head-row">
                         <th>Код</th>
                         <th>Название</th>
-                        <th>Размер</th>
                         <th>Цена</th>
+                        <th>Цена со скидкой</th>
                         <th>Количество</th>
-                        <th>Сумма</th>
+                        <th>Наличие</th>
                         <th></th>
                     </tr>
                 </thead>
-                <tbody class="data-table__body" id="cart-body"></tbody>
+                <tbody class="data-table__body" id="catalog-body"></tbody>
             </table>
-
-            <p id="cart-empty" class="data-table__empty" hidden>
-                Корзина пуста. Перейдите в <a href="catalog.html">каталог</a>, чтобы добавить товары.
-            </p>
-
-            <div class="cart-summary" id="cart-summary" hidden>
-                <div class="cart-summary__row">
-                    <span>Итого:</span>
-                    <b id="cart-total">0.00 ₽</b>
-                </div>
-                <div class="cart-summary__actions">
-                    <button id="checkout-btn" class="btn btn--primary" type="button">Оформить заказ</button>
-                    <button id="clear-cart-btn" class="btn btn--ghost btn--dark" type="button">Очистить корзину</button>
-                </div>
-            </div>
+            <p id="catalog-empty" class="data-table__empty" hidden>Ничего не найдено</p>
         </main>
     </section>
 
@@ -60,6 +83,6 @@
 
     <script src="./sql-wasm.js"></script>
     <script src="./db.js"></script>
-    <script src="./app-cart.js"></script>
+    <script src="./app-catalog.js"></script>
 </body>
 </html>
