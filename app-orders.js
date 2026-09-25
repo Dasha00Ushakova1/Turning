@@ -17,14 +17,17 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    orders.forEach(o => {
+        orders.forEach(o => {
+        const composition = (o.items || [])
+            .map(i => `${i.productName} (${i.size}), ${i.quantity} шт.`)
+            .join('; ');
+
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${o.code}</td>
             <td>${o.date}</td>
-            <td>${o.productName} — ${o.size}, ${o.quantity} шт.</td>
+            <td>${composition}</td>
             <td>${formatPrice(o.total)}</td>
         `;
         body.appendChild(tr);
     });
-});
