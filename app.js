@@ -2,31 +2,27 @@
 'use strict';
 
 const CONFIG = {
-  
+ 
     lowStockThreshold: 5,
 
 
     manyStockThreshold: 10,
 
-  
     discountRules: [
-        { maxQuantity: 5,  percent: 10 }, 
-        { maxQuantity: 10, percent: 5  }, 
-        { maxQuantity: Infinity, percent: 0 } 
+        { maxQuantity: 5,        percent: 10 },
+        { maxQuantity: 10,       percent: 5  },
+        { maxQuantity: Infinity, percent: 0  }
     ]
 };
 
 
 let database = null;
 
-
-
 function executeQuery(sql) {
     const result = database.exec(sql);
     if (!result || result.length === 0) {
         return [];
     }
-
     const { columns, values } = result[0];
     return values.map(row => {
         const record = {};
@@ -36,7 +32,6 @@ function executeQuery(sql) {
         return record;
     });
 }
-
 
 function formatPrice(value) {
     if (value === null || value === undefined) {
@@ -53,11 +48,9 @@ function calculateDiscount(price, quantity) {
     return { finalPrice, discountPercent };
 }
 
-
 function getStockLabel(quantity) {
     return quantity >= CONFIG.manyStockThreshold ? 'много' : 'мало';
 }
-
 
 function createTableRow(cells, rowClass = '') {
     const row = document.createElement('tr');
@@ -79,7 +72,6 @@ function renderTableBody(tbodyId, rows, columnCount) {
         ));
         return;
     }
-
     rows.forEach(row => tbody.appendChild(row));
 }
 
@@ -92,7 +84,6 @@ function loadCatalog() {
             product.Price,
             product.Quantity
         );
-
         const stockLabel = getStockLabel(product.Quantity);
         const isLowStock = product.Quantity < CONFIG.lowStockThreshold;
 
@@ -123,7 +114,6 @@ function loadOrders() {
         SELECT
             o.Order_Code,
             o.Order_Date,
-            o.Total_Cost,
             c.First_Name,
             c.Last_Name
         FROM Orders o
@@ -131,15 +121,43 @@ function loadOrders() {
         ORDER BY o.Order_Code
     `);
 
-    const rows = orders.map(order => createTableRow([
-        `<td>${order.Order_Code}</td>`,
-        `<td>${order.First_Name} ${order.Last_Name}</td>`,
-        `<td>${order.Order_Date}</td>`,
-        `<td>${formatPrice(order.Total_Cost)}</td>`
-    ]));
+    const orderItems = executeQuery(`
+        SELECT
+            od.Order_Code,
+            p.Price,
+            od.Quantity
+        FROM Order_Details od
+        JOIN Products p ON p.Product_Code = od.Product_Code
+    `);
+
+    const totalsByOrder = calculateOrderTotals(orderItems);
+
+    const rows = orders.map(order => {
+        const total = totalsByOrder[order.Order_Code] ?? 0;
+
+        return createTableRow([
+            `<td>${order.Order_Code}</td>`,
+            `<td>${order.First_Name} ${order.Last_Name}</td>`,
+            `<td>${order.Order_Date}</td>`,
+            `<td>${formatPrice(total)}</td>`
+        ]);
+    });
 
     renderTableBody('orders-body', rows, 4);
 }
+
+function calculateOrderTotals(items) {
+    const totals = {};
+
+    items.forEach(item => {
+        const { finalPrice } = calculateDiscount(item.Price, item.Quantity);
+        totals[item.Order_Code] =
+            (totals[item.Order_Code] || 0) + finalPrice * item.Quantity;
+    });
+
+    return totals;
+}
+
 
 async function initializeApp() {
     try {
@@ -159,10 +177,10 @@ async function initializeApp() {
         loadOrders();
     } catch (error) {
         console.error('Ошибка инициализации:', error);
-        renderTableBody('catalog-body', [], 6);
-        renderTableBody('orders-body', [], 4);
         document.getElementById('catalog-body').innerHTML =
             `<tr><td colspan="6" class="data-table__empty">Ошибка: ${error.message}</td></tr>`;
+        document.getElementById('orders-body').innerHTML =
+            `<tr><td colspan="4" class="data-table__empty">Ошибка: ${error.message}</td></tr>`;
     }
 }
 
