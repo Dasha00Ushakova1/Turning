@@ -4,11 +4,13 @@
  * Пользователи (логин → ФИО)
  * ============================================================ */
 const USERS = {
-    'yuder':   'Юдер Айл',
-    'kiashir': 'Кишиар Ла Орр',
-    'ever':    'Эвер Бэк',
-    'hinn':    'Хинн Элдер',
-    'finn':    'Финн Элдер'
+    'yuder':   { fullName: 'Юдер Айл',         role: 'customer' },
+    'kiashir': { fullName: 'Кишиар Ла Орр',    role: 'customer' },
+    'ever':    { fullName: 'Эвер Бэк',         role: 'customer' },
+    'hinn':    { fullName: 'Хинн Элдер',       role: 'customer' },
+    'finn':    { fullName: 'Финн Элдер',       role: 'customer' },
+    'manager': { fullName: 'Лушан', role: 'manager'  },
+    'admin':   { fullName: 'Энон',   role: 'admin'    }
 };
 
 /* ============================================================
@@ -116,6 +118,50 @@ const store = {
         return this.getCart().reduce((sum, item) => sum + item.quantity, 0);
     }
 };
+    /* ---------- Роли ---------- */
+    isManager() {
+        const u = this.getUser();
+        return !!u && (u.role === 'manager' || u.role === 'admin');
+    },
+    isAdmin() {
+        const u = this.getUser();
+        return !!u && u.role === 'admin';
+    },
+
+    /* ---------- Работа с заказами (CRUD) ---------- */
+    getOrderByCode(code) {
+        return this.getOrders().find(o => o.code === code) || null;
+    },
+    updateOrder(code, patch) {
+        const orders = this.getOrders();
+        const idx = orders.findIndex(o => o.code === code);
+        if (idx === -1) return;
+        orders[idx] = { ...orders[idx], ...patch };
+        this.setOrders(orders);
+    },
+    removeOrderItem(orderCode, itemIndex) {
+        const orders = this.getOrders();
+        const order = orders.find(o => o.code === orderCode);
+        if (!order) return;
+        order.items.splice(itemIndex, 1);
+        order.total = order.items.reduce((s, i) => s + i.price * i.quantity, 0);
+        this.setOrders(orders);
+    },
+    addOrderItem(orderCode, item) {
+        const orders = this.getOrders();
+        const order = orders.find(o => o.code === orderCode);
+        if (!order) return;
+        const existing = order.items.find(
+            i => i.productCode === item.productCode && i.size === item.size
+        );
+        if (existing) {
+            existing.quantity += item.quantity;
+        } else {
+            order.items.push({ ...item });
+        }
+        order.total = order.items.reduce((s, i) => s + i.price * i.quantity, 0);
+        this.setOrders(orders);
+    }
 
 /* ============================================================
  * Загрузка БД (кэшируется на время жизни страницы)
