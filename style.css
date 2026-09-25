@@ -75,6 +75,20 @@ body {
     object-fit: cover;
     border-radius: 50%;
 }
+.logo::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    background-image: url('./1000109367.jpg');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    
+}
 
 /* ==============================================================
    4. ПОЛЯ ВВОДА
