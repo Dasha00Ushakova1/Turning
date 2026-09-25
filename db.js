@@ -1,16 +1,16 @@
 'use strict';
 
 /* ============================================================
- * Пользователи (логин → ФИО)
+ * Пользователи (логин → ФИО и роль)
  * ============================================================ */
 const USERS = {
-    'yuder':   { fullName: 'Юдер Айл',         role: 'customer' },
-    'kiashir': { fullName: 'Кишиар Ла Орр',    role: 'customer' },
-    'ever':    { fullName: 'Эвер Бэк',         role: 'customer' },
-    'hinn':    { fullName: 'Хинн Элдер',       role: 'customer' },
-    'finn':    { fullName: 'Финн Элдер',       role: 'customer' },
-    'manager': { fullName: 'Мик Шуден', role: 'manager'  },
-    'admin':   { fullName: 'Энон',   role: 'admin'    }
+    'yuder':   { fullName: 'Юдер Айл',        role: 'customer' },
+    'kiashir': { fullName: 'Кишиар Ла Орр',   role: 'customer' },
+    'ever':    { fullName: 'Эвер Бэк',        role: 'customer' },
+    'hinn':    { fullName: 'Хинн Элдер',      role: 'customer' },
+    'finn':    { fullName: 'Финн Элдер',      role: 'customer' },
+    'manager': { fullName: 'Мик Шуден',       role: 'manager'  },
+    'admin':   { fullName: 'Энон',            role: 'admin'    }
 };
 
 /* ============================================================
@@ -116,8 +116,8 @@ const store = {
     },
     getCartCount() {
         return this.getCart().reduce((sum, item) => sum + item.quantity, 0);
-    }
-};
+    },
+
     /* ---------- Роли ---------- */
     isManager() {
         const u = this.getUser();
@@ -162,6 +162,7 @@ const store = {
         order.total = order.items.reduce((s, i) => s + i.price * i.quantity, 0);
         this.setOrders(orders);
     }
+};
 
 /* ============================================================
  * Загрузка БД (кэшируется на время жизни страницы)
@@ -218,6 +219,21 @@ function calculateDiscount(price, quantity) {
 
 function getStockLabel(quantity) {
     return quantity >= CONFIG.manyStockThreshold ? 'много' : 'мало';
+}
+
+/** Склонение: 1 товар, 2 товара, 5 товаров. */
+function plural(n, one, few, many) {
+    const mod10 = n % 10, mod100 = n % 100;
+    if (mod10 === 1 && mod100 !== 11) return one;
+    if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return few;
+    return many;
+}
+
+/** Форматирует дату ISO (2026-01-01) в человекочитаемую. */
+function formatDate(iso) {
+    if (!iso) return '—';
+    const [y, m, d] = iso.split('-');
+    return `${d}.${m}.${y}`;
 }
 
 /* ============================================================
@@ -284,20 +300,6 @@ function updateCartBadge() {
     const count = store.getCartCount();
     badge.textContent = count;
     badge.hidden = count === 0;
-}
-/** Склонение: 1 товар, 2 товара, 5 товаров. */
-function plural(n, one, few, many) {
-    const mod10 = n % 10, mod100 = n % 100;
-    if (mod10 === 1 && mod100 !== 11) return one;
-    if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return few;
-    return many;
-}
-
-/** Форматирует дату ISO (2026-01-01) в человекочитаемую. */
-function formatDate(iso) {
-    if (!iso) return '—';
-    const [y, m, d] = iso.split('-');
-    return `${d}.${m}.${y}`;
 }
 
 document.addEventListener('DOMContentLoaded', ensureUiHelpers);
