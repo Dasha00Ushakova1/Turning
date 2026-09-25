@@ -70,8 +70,7 @@ body {
     margin-bottom: 16px;
 }
 .login-card__logo-img {
-    width: 96px;
-    height: 96px;
+    width: 140px; height: 140px;
     object-fit: contain;
     border-radius: var(--radius);
 }
