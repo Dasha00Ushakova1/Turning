@@ -7,28 +7,33 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('user-name').textContent = user.fullName;
 
     const roleLabel = { customer: 'Клиент', manager: 'Менеджер', admin: 'Администратор' };
-    document.getElementById('user-role').textContent = roleLabel[user.role] || '';
+    const roleEl = document.getElementById('user-role');
+    if (roleEl) roleEl.textContent = roleLabel[user.role] || '';
 
     const isManager = store.isManager();
     const isAdmin   = store.isAdmin();
 
-    // Показываем панель инструментов только менеджеру и админу
-    if (isManager) {
-        document.getElementById('toolbar').hidden = false;
-    }
-    // Кнопка «Добавить товар» — только админу
-    if (isAdmin) {
-        document.getElementById('add-product-btn').hidden = false;
-    }
+    // Показ элементов управления по ролям
+    const toolbar = document.getElementById('toolbar');
+    if (toolbar && isManager) toolbar.hidden = false;
 
-    // Обработчики навигации
-    document.getElementById('logout-btn').addEventListener('click', () => {
-        store.clearUser();
-        window.location.href = 'index.html';
-    });
-    document.getElementById('goto-orders').addEventListener('click', () => {
-        window.location.href = 'orders.html';
-    });
+    const addProductBtn = document.getElementById('add-product-btn');
+    if (addProductBtn && isAdmin) addProductBtn.hidden = false;
+
+    // Кнопки навигации
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+            store.clearUser();
+            window.location.href = 'index.html';
+        });
+    }
+    const gotoOrders = document.getElementById('goto-orders');
+    if (gotoOrders) {
+        gotoOrders.addEventListener('click', () => {
+            window.location.href = 'orders.html';
+        });
+    }
 
     const searchInput  = document.getElementById('search-input');
     const filterStock  = document.getElementById('filter-stock');
@@ -36,20 +41,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     const catalogBody  = document.getElementById('catalog-body');
     const catalogEmpty = document.getElementById('catalog-empty');
 
-    // Восстанавливаем настройки только для тех, кому они доступны
     if (isManager) {
         const prefs = store.getCatalogPrefs();
-        searchInput.value = prefs.searchQuery;
-        filterStock.value = prefs.stockFilter;
-        sortSelect.value  = prefs.sortKey;
+        if (searchInput) searchInput.value = prefs.searchQuery;
+        if (filterStock) filterStock.value = prefs.stockFilter;
+        if (sortSelect)  sortSelect.value  = prefs.sortKey;
     }
 
+    /* ============================================================
+     * 1. Сначала — загрузка БД и подготовка данных
+     * ============================================================ */
     let catalog = [];
     let db;
 
     try {
         db = await loadDatabase();
-        catalog = query(db, 'SELECT * FROM Products ORDER BY Product_Code').map(p => {
+        const rows = query(db, 'SELECT * FROM Products ORDER BY Product_Code');
+
+        catalog = rows.map(p => {
             const { finalPrice, discountPercent } = calculateDiscount(p.Price, p.Quantity);
             return {
                 code: p.Product_Code,
@@ -62,15 +71,23 @@ document.addEventListener('DOMContentLoaded', async () => {
             };
         });
     } catch (error) {
-        console.error(error);
-        showModal('Ошибка загрузки', error.message, 'error');
+        console.error('Ошибка загрузки БД:', error);
+        if (typeof showModal === 'function') {
+            showModal('Ошибка загрузки', error.message, 'error');
+        }
+        if (catalogBody) {
+            catalogBody.innerHTML =
+                `<tr><td colspan="7" class="data-table__empty">Не удалось загрузить данные</td></tr>`;
+        }
         return;
     }
 
+    /* ============================================================
+     * 2. Только теперь — функция рендера
+     * ============================================================ */
     function render() {
         let items = [...catalog];
 
-        // Поиск/фильтр/сортировка — только для менеджера и админа
         if (isManager) {
             const prefs = store.getCatalogPrefs();
 
@@ -97,10 +114,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         catalogBody.innerHTML = '';
 
         if (items.length === 0) {
-            catalogEmpty.hidden = false;
+            if (catalogEmpty) catalogEmpty.hidden = false;
             return;
         }
-        catalogEmpty.hidden = true;
+        if (catalogEmpty) catalogEmpty.hidden = true;
 
         items.forEach(item => {
             const tr = document.createElement('tr');
@@ -142,7 +159,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 ${actionsCell}
             `;
 
-            // Клик по строке открывает карточку товара только у менеджера/админа
             if (isManager) {
                 tr.addEventListener('click', e => {
                     if (e.target.closest('button')) return;
@@ -154,7 +170,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             catalogBody.appendChild(tr);
         });
 
-        // Обработчики кнопок в строках
+        // Кнопки действий
         if (isManager && !isAdmin) {
             catalogBody.querySelectorAll('.add-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
@@ -190,7 +206,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     if (!item) return;
                     if (!confirm(`Удалить товар «${item.name}»?`)) return;
 
-                    // Удаляем в памяти (в БД sql.js это живёт до перезагрузки)
                     try {
                         db.run(`DELETE FROM Products WHERE Product_Code = ${code}`);
                         catalog = catalog.filter(i => i.code !== code);
@@ -204,28 +219,39 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // Обработчики тулбара — только если панель видима
+    /* ============================================================
+     * 3. Обработчики тулбара
+     * ============================================================ */
     if (isManager) {
-        searchInput.addEventListener('input', e => {
-            store.setCatalogPrefs({ ...store.getCatalogPrefs(), searchQuery: e.target.value });
-            render();
-        });
-        filterStock.addEventListener('change', e => {
-            store.setCatalogPrefs({ ...store.getCatalogPrefs(), stockFilter: e.target.value });
-            render();
-        });
-        sortSelect.addEventListener('change', e => {
-            store.setCatalogPrefs({ ...store.getCatalogPrefs(), sortKey: e.target.value });
-            render();
+        if (searchInput) {
+            searchInput.addEventListener('input', e => {
+                store.setCatalogPrefs({ ...store.getCatalogPrefs(), searchQuery: e.target.value });
+                render();
+            });
+        }
+        if (filterStock) {
+            filterStock.addEventListener('change', e => {
+                store.setCatalogPrefs({ ...store.getCatalogPrefs(), stockFilter: e.target.value });
+                render();
+            });
+        }
+        if (sortSelect) {
+            sortSelect.addEventListener('change', e => {
+                store.setCatalogPrefs({ ...store.getCatalogPrefs(), sortKey: e.target.value });
+                render();
+            });
+        }
+    }
+
+    if (addProductBtn) {
+        addProductBtn.addEventListener('click', () => {
+            window.location.href = 'product.html?mode=create';
         });
     }
 
-    // Кнопка «Добавить товар» — только админ
-    const addBtn = document.getElementById('add-product-btn');
-    addBtn.addEventListener('click', () => {
-        window.location.href = 'product.html?mode=create';
-    });
-
+    /* ============================================================
+     * 4. Первый рендер — данные уже готовы
+     * ============================================================ */
     render();
     updateCartBadge();
 });
