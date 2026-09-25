@@ -5,12 +5,12 @@
  * ============================================================ */
 const USERS = {
     'yuder':   { fullName: 'Юдер Айл',        role: 'customer' },
-    'kiashir': { fullName: 'Кишиар Ла Орр',   role: 'customer' },
+    'kishiar': { fullName: 'Кишиар Ла Орр',   role: 'customer' },
     'ever':    { fullName: 'Эвер Бэк',        role: 'customer' },
     'hinn':    { fullName: 'Хинн Элдер',      role: 'customer' },
     'finn':    { fullName: 'Финн Элдер',      role: 'customer' },
-    'mick': { fullName: 'Мик Шуден',       role: 'manager'  },
-    'inon':   { fullName: 'Энон',   role: 'admin'    }
+    'mick':    { fullName: 'Мик Шуден',       role: 'manager'  },
+    'inon':    { fullName: 'Энон',            role: 'admin'    }
 };
 
 /* ============================================================
