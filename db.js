@@ -158,5 +158,44 @@ function ensureUiHelpers() {
         showToast._t = setTimeout(() => toast.hidden = true, 2500);
     };
 }
+    /* ---------- Корзина ---------- */
+    getCart() {
+        const raw = localStorage.getItem('cart');
+        return raw ? JSON.parse(raw) : [];
+    },
+    setCart(items) {
+        localStorage.setItem('cart', JSON.stringify(items));
+    },
+  
+    addToCart(item) {
+        const cart = this.getCart();
+        const existing = cart.find(
+            c => c.code === item.code && c.size === item.size
+        );
+        if (existing) {
+            existing.quantity += item.quantity;
+        } else {
+            cart.push({ ...item });
+        }
+        this.setCart(cart);
+    },
+    removeFromCart(code, size) {
+        this.setCart(this.getCart().filter(c => !(c.code === code && c.size === size)));
+    },
+    updateCartQuantity(code, size, quantity) {
+        const cart = this.getCart();
+        const item = cart.find(c => c.code === code && c.size === size);
+        if (item) {
+            item.quantity = quantity;
+            this.setCart(cart);
+        }
+    },
+    clearCart() {
+        localStorage.removeItem('cart');
+    },
+ 
+    getCartCount() {
+        return this.getCart().reduce((sum, item) => sum + item.quantity, 0);
+    }
 
 document.addEventListener('DOMContentLoaded', ensureUiHelpers);
