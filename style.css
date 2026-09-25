@@ -135,6 +135,102 @@ body {
     box-shadow: var(--shadow);
     gap: 16px;
 }
+/* ==============================
+   Карточка заказа
+   ============================== */
+.order-card {
+    background: #fff;
+    padding: 24px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+}
+.order-card__header {
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+}
+.order-card__row {
+    margin: 6px 0;
+}
+.order-card__subtitle {
+    margin: 16px 0 12px;
+    font-size: 17px;
+    color: var(--color-primary);
+}
+.order-card__footer {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--color-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+.order-card__total {
+    font-size: 18px;
+}
+
+/* Позиции заказа */
+.order-items {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.order-item {
+    display: grid;
+    grid-template-columns: 120px 1fr auto;
+    gap: 16px;
+    align-items: center;
+    padding: 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: #fafbfc;
+}
+.order-item__image {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: var(--radius);
+    background: #eee;
+}
+.order-item__body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.order-item__title {
+    font-size: 16px;
+    color: var(--color-primary);
+    margin-bottom: 4px;
+}
+.order-item__desc {
+    color: var(--color-text-muted);
+    font-size: 13px;
+    margin-bottom: 6px;
+}
+.order-item__row {
+    font-size: 14px;
+}
+.order-item__actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+@media (max-width: 640px) {
+    .order-item {
+        grid-template-columns: 1fr;
+    }
+    .order-item__image {
+        width: 100%;
+        height: auto;
+        max-height: 200px;
+    }
+    .order-item__actions {
+        flex-direction: row;
+    }
+}
 .logo {
     display: flex;
     align-items: center;
