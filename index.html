@@ -3,30 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Turning Shop — Каталог товаров</title>
+    <title>Turning Shop</title>
     <link rel="stylesheet" href="./style.css">
-   <script src="./sql-wasm.js"></script>
-   <script src="./app.js" defer></script>
+    <script src="./sql-wasm.js"></script>
+    <script src="./app.js" defer></script>
 </head>
 <body>
-    <header class="app-header">
-        <div class="logo">
-            <img src="./logo.svg" alt="Логотип Turning Shop" class="logo__image">
-            <h1 class="logo__title">Turning Shop</h1>
-        </div>
-        <nav class="app-nav">
-            <ul class="app-nav__list">
-                <li class="app-nav__item"><a class="app-nav__link" href="#catalog">Каталог</a></li>
-                <li class="app-nav__item"><a class="app-nav__link" href="#orders">Заказы</a></li>
-            </ul>
-        </nav>
-    </header>
 
-    <main class="app-main">
-        <section id="catalog" class="section">
+
+    <section id="screen-login" class="screen screen--active">
+        <div class="login-card">
+            <h1 class="login-card__title">Turning Shop</h1>
+            <p class="login-card__subtitle">Вход в систему</p>
+
+            <form id="login-form" class="login-form" novalidate>
+                <label class="field">
+                    <span class="field__label">Логин</span>
+                    <input id="login-input" class="field__input" type="text"
+                           placeholder="Введите логин" autocomplete="off">
+                    <span class="field__error" id="login-error"></span>
+                </label>
+                <button class="btn btn--primary" type="submit">Войти</button>
+            </form>
+            <p class="login-card__hint">
+                Доступные логины: <b>yuder</b>, <b>kiashir</b>, <b>ever</b>, <b>hinn</b>, <b>finn</b>
+            </p>
+        </div>
+    </section>
+
+    <section id="screen-catalog" class="screen">
+        <header class="app-header">
+            <div class="logo">
+                <img src="./logo.svg" alt="Логотип" class="logo__image"
+                     onerror="this.style.display='none'">
+                <h1 class="logo__title">Turning Shop</h1>
+            </div>
+
+            <div class="user-box">
+                <span id="user-name" class="user-box__name"></span>
+                <button id="logout-btn" class="btn btn--ghost" type="button">Выйти</button>
+            </div>
+        </header>
+
+        <main class="app-main">
             <h2 class="section__title">Каталог товаров</h2>
 
-            <table class="data-table" id="catalog-table">
+            <div class="toolbar">
+                <input id="search-input" class="field__input" type="text"
+                       placeholder="Поиск по названию...">
+
+                <select id="filter-stock" class="field__input">
+                    <option value="all">Все товары</option>
+                    <option value="many">Только «много»</option>
+                    <option value="few">Только «мало»</option>
+                </select>
+
+                <select id="sort-select" class="field__input">
+                    <option value="code-asc">Код ↑</option>
+                    <option value="code-desc">Код ↓</option>
+                    <option value="name-asc">Название А→Я</option>
+                    <option value="name-desc">Название Я→А</option>
+                    <option value="price-asc">Цена ↑</option>
+                    <option value="price-desc">Цена ↓</option>
+                    <option value="qty-asc">Количество ↑</option>
+                    <option value="qty-desc">Количество ↓</option>
+                </select>
+            </div>
+
+            <table class="data-table">
                 <thead class="data-table__head">
                     <tr>
                         <th>Код</th>
@@ -37,33 +81,61 @@
                         <th>Наличие</th>
                     </tr>
                 </thead>
-                <tbody class="data-table__body" id="catalog-body">
-                    <tr><td colspan="6" class="data-table__empty">Загрузка…</td></tr>
-                </tbody>
+                <tbody class="data-table__body" id="catalog-body"></tbody>
             </table>
-        </section>
 
-        <section id="orders" class="section">
-            <h2 class="section__title">Заказы</h2>
+            <p id="catalog-empty" class="data-table__empty" hidden>Ничего не найдено</p>
+        </main>
+    </section>
 
-            <table class="data-table" id="orders-table">
+
+    <section id="screen-product" class="screen">
+        <header class="app-header">
+            <button id="back-to-catalog" class="btn btn--ghost" type="button">← Назад</button>
+            <h2 class="app-header__title">Карточка товара</h2>
+            <span id="user-name-product" class="user-box__name"></span>
+        </header>
+
+        <main class="app-main">
+            <div class="product" id="product-details">
+    
+            </div>
+        </main>
+    </section>
+
+
+    <section id="screen-orders" class="screen">
+        <header class="app-header">
+            <button id="back-to-catalog-2" class="btn btn--ghost" type="button">← Назад</button>
+            <h2 class="app-header__title">Мои заказы</h2>
+            <span id="user-name-orders" class="user-box__name"></span>
+        </header>
+
+        <main class="app-main">
+            <table class="data-table">
                 <thead class="data-table__head">
                     <tr>
-                        <th>Код заказа</th>
-                        <th>Клиент</th>
-                        <th>Дата заказа</th>
-                        <th>Общая стоимость</th>
+                        <th>Код</th><th>Дата</th><th>Состав</th><th>Сумма</th>
                     </tr>
                 </thead>
-                <tbody class="data-table__body" id="orders-body">
-                    <tr><td colspan="4" class="data-table__empty">Загрузка…</td></tr>
-                </tbody>
+                <tbody class="data-table__body" id="orders-body"></tbody>
             </table>
-        </section>
-    </main>
+            <p id="orders-empty" class="data-table__empty" hidden>Заказов нет</p>
+        </main>
+    </section>
 
-    <footer class="app-footer">
-        <p>&copy; 2026 Turning Shop - спасите</p>
-    </footer>
+
+    <div id="modal" class="modal" hidden>
+        <div class="modal__window">
+            <h3 id="modal-title" class="modal__title"></h3>
+            <p id="modal-text" class="modal__text"></p>
+            <div class="modal__actions">
+                <button id="modal-ok" class="btn btn--primary" type="button">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast" hidden></div>
+
 </body>
 </html>
