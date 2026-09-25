@@ -23,19 +23,17 @@
                        placeholder="Поиск...">
             </div>
 
-            <table class="data-table">
-                <thead class="data-table__head">
-                    <tr>
-                        <th>Код</th>
-                        <th>Дата</th>
-                        <th id="col-customer">Клиент</th>
-                        <th>Состав</th>
-                        <th>Сумма</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody class="data-table__body" id="orders-body"></tbody>
-            </table>
+           <div class="table-wrap">
+    <table class="data-table">
+        <thead class="data-table__head">
+            <tr>
+                <th>Код</th><th>Дата</th><th id="col-customer">Клиент</th>
+                <th>Состав</th><th>Сумма</th><th></th>
+            </tr>
+        </thead>
+        <tbody class="data-table__body" id="orders-body"></tbody>
+    </table>
+</div>
 
             <p id="orders-empty" class="data-table__empty" hidden>Заказов нет</p>
         </main>
