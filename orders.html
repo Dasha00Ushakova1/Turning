@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Turning Shop — Мои заказы</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <section class="screen screen--active">
+        <header class="app-header">
+            <button id="back-to-catalog" class="btn btn--ghost" type="button">← Назад</button>
+            <h2 class="app-header__title">Мои заказы</h2>
+            <span id="user-name" class="user-box__name"></span>
+        </header>
+
+        <main class="app-main">
+            <table class="data-table">
+                <thead class="data-table__head">
+                    <tr>
+                        <th>Код</th><th>Дата</th><th>Состав</th><th>Сумма</th>
+                    </tr>
+                </thead>
+                <tbody class="data-table__body" id="orders-body"></tbody>
+            </table>
+            <p id="orders-empty" class="data-table__empty" hidden>Заказов нет</p>
+        </main>
+    </section>
+
+    <div id="modal" class="modal" hidden>
+        <div class="modal__window">
+            <h3 id="modal-title" class="modal__title"></h3>
+            <p id="modal-text" class="modal__text"></p>
+            <div class="modal__actions">
+                <button id="modal-ok" class="btn btn--primary" type="button">OK</button>
+            </div>
+        </div>
+    </div>
+    <div id="toast" class="toast" hidden></div>
+
+    <script src="./db.js"></script>
+    <script src="./app-orders.js"></script>
+</body>
+</html>
