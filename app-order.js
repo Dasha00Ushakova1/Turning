@@ -87,8 +87,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     /* Карточки товаров заказа */
     const itemsHtml = (order.items || []).map((item, idx) => {
         const sum = item.price * item.quantity;
-        const prodRow = query(db, `SELECT Image_Data FROM Products WHERE Product_Code = ${item.productCode}`)[0];
-        const imgUrl = (prodRow && prodRow.Image_Data) || imageForCode(item.productCode);
+               const allProducts = getProductsCombined(db);
+        const prod = allProducts.find(p => p.Product_Code === item.productCode);
+        const imgUrl = (prod && prod.Image_Data) || imageForCode(item.productCode);
 
         return `
             <div class="order-item">
