@@ -36,10 +36,8 @@ function imageDropzoneHtml(previewSrc) {
                 <input type="file" id="edit-image" accept="image/*" hidden>
                 <img id="image-preview" class="dropzone__preview" src="${previewSrc}" alt="Предпросмотр">
                 <div class="dropzone__overlay">
-                    <span class="dropzone__icon">🖼</span>
                     <span class="dropzone__text">Перетащите картинку сюда</span>
                     <span class="dropzone__hint">или нажмите, чтобы выбрать файл</span>
-                    <span class="dropzone__hint">JPG, PNG · до 2 МБ</span>
                 </div>
             </div>
         </div>
