@@ -160,31 +160,27 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             }
 
-            catalogBody.appendChild(tr);
-        });
-
-        if (isAdmin) {
-            catalogBody.querySelectorAll('.edit-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    store.setSelectedProduct(Number(btn.dataset.code));
-                    window.location.href = 'product.html?mode=edit';
-                });
-            });
-            catalogBody.querySelectorAll('.delete-btn').forEach(btn => {
+                   catalogBody.querySelectorAll('.delete-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const code = Number(btn.dataset.code);
                     const item = catalog.find(i => i.code === code);
                     if (!item) return;
-                    if (!confirm(`Удалить товар «${item.name}»?`)) return;
 
-                    try {
-                        deleteProductCombined(db, code);   // ← БД + localStorage
-                        catalog = catalog.filter(i => i.code !== code);
-                        render();
-                        showToast('Товар удалён', 'success');
-                    } catch (e) {
-                        showModal('Ошибка удаления', e.message, 'error');
-                    }
+                    // Своё окно подтверждения в стиле сайта
+                    showConfirm(
+                        'Удалить товар',
+                        `Вы действительно хотите удалить «${item.name}» (код ${code})? Это действие нельзя отменить.`,
+                        () => {
+                            try {
+                                deleteProductCombined(db, code);
+                                catalog = catalog.filter(i => i.code !== code);
+                                render();
+                                showToast('Товар удалён', 'success');
+                            } catch (e) {
+                                showModal('Ошибка удаления', e.message, 'error');
+                            }
+                        }
+                    );
                 });
             });
         }
