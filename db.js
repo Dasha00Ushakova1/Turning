@@ -279,6 +279,38 @@ function ensureUiHelpers() {
         modal.classList.add('modal--visible');
         modal.hidden = false;
     };
+        /* Своё окно подтверждения с двумя кнопками */
+    window.showConfirm = function (title, text, onConfirm) {
+        const overlay = document.createElement('div');
+        overlay.className = 'modal modal--visible';
+        overlay.innerHTML = `
+            <div class="modal__window">
+                <h3 class="modal__title">${title}</h3>
+                <p class="modal__text">${text}</p>
+                <div class="modal__actions">
+                    <button class="btn btn--ghost btn--dark" data-action="cancel" type="button">Отмена</button>
+                    <button class="btn btn--primary" data-action="confirm" type="button">Удалить</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(overlay);
+
+        function close() {
+            overlay.remove();
+        }
+
+        overlay.addEventListener('click', e => {
+            if (e.target === overlay) close();
+        });
+
+        overlay.querySelector('[data-action="cancel"]').addEventListener('click', close);
+        overlay.querySelector('[data-action="confirm"]').addEventListener('click', () => {
+            close();
+            try { onConfirm(); }
+            catch (err) { console.error(err); }
+        });
+    };
 
     window.showToast = function (message, type = 'info') {
         toast.textContent = message;
