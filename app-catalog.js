@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     try {
         db = await loadDatabase();
-        const rows = getProductsCombined(db);      // ← объединение с localStorage
+        const rows = getProductsCombined(db);      // БД + localStorage
 
         catalog = rows.map(p => {
             const { finalPrice, discountPercent } = calculateDiscount(p.Price, p.Quantity);
@@ -143,6 +143,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 ${actionsCell}
             `;
 
+            // Клик по строке — открыть карточку (менеджер/админ)
             if (isManager) {
                 tr.addEventListener('click', e => {
                     if (e.target.closest('button')) return;
@@ -150,6 +151,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     window.location.href = 'product.html';
                 });
             }
+
+            // Клиент: кнопка «Заказать»
             if (user.role === 'customer') {
                 const orderBtn = tr.querySelector('.order-btn');
                 if (orderBtn) {
@@ -160,13 +163,26 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             }
 
-                   catalogBody.querySelectorAll('.delete-btn').forEach(btn => {
+            catalogBody.appendChild(tr);
+        });
+
+        /* ---------- Обработчики кнопок действий — ПОСЛЕ цикла ---------- */
+        if (isAdmin) {
+            // Редактирование
+            catalogBody.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    store.setSelectedProduct(Number(btn.dataset.code));
+                    window.location.href = 'product.html?mode=edit';
+                });
+            });
+
+            // Удаление — со своим подтверждением в стиле сайта
+            catalogBody.querySelectorAll('.delete-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const code = Number(btn.dataset.code);
                     const item = catalog.find(i => i.code === code);
                     if (!item) return;
 
-                    // Своё окно подтверждения в стиле сайта
                     showConfirm(
                         'Удалить товар',
                         `Вы действительно хотите удалить «${item.name}» (код ${code})? Это действие нельзя отменить.`,
@@ -186,6 +202,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    /* ---------- Обработчики тулбара ---------- */
     if (isManager) {
         searchInput.addEventListener('input', e => {
             store.setCatalogPrefs({ ...store.getCatalogPrefs(), searchQuery: e.target.value });
