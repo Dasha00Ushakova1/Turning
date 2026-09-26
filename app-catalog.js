@@ -5,7 +5,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!user) return;
 
     document.getElementById('user-name').textContent = user.fullName;
-
     const roleLabel = { customer: 'Клиент', manager: 'Менеджер', admin: 'Администратор' };
     const roleEl = document.getElementById('user-role');
     if (roleEl) roleEl.textContent = roleLabel[user.role] || '';
@@ -13,11 +12,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const isManager = store.isManager();
     const isAdmin   = store.isAdmin();
 
-    // Панель фильтров — только менеджеру/админу
     const toolbar = document.getElementById('toolbar');
     if (toolbar && isManager) toolbar.hidden = false;
 
-    // Кнопка «+ Добавить товар» — только админу
     const addProductBtn = document.getElementById('add-product-btn');
     if (addProductBtn && isAdmin) addProductBtn.hidden = false;
 
@@ -42,13 +39,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (sortSelect)  sortSelect.value  = prefs.sortKey;
     }
 
-    /* ---------- Загрузка БД ---------- */
+    /* ---------- Загрузка БД + localStorage ---------- */
     let catalog = [];
     let db;
 
     try {
         db = await loadDatabase();
-        const rows = query(db, 'SELECT * FROM Products ORDER BY Product_Code');
+        const rows = getProductsCombined(db);      // ← объединение с localStorage
 
         catalog = rows.map(p => {
             const { finalPrice, discountPercent } = calculateDiscount(p.Price, p.Quantity);
@@ -59,7 +56,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 quantity: p.Quantity,
                 finalPrice,
                 discountPercent,
-                stockLabel: getStockLabel(p.Quantity)
+                stockLabel: getStockLabel(p.Quantity),
+                imageData: p.Image_Data || null
             };
         });
     } catch (error) {
@@ -145,7 +143,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 ${actionsCell}
             `;
 
-            // Клик по строке — открыть карточку (для менеджера и админа)
             if (isManager) {
                 tr.addEventListener('click', e => {
                     if (e.target.closest('button')) return;
@@ -153,8 +150,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     window.location.href = 'product.html';
                 });
             }
-
-            // Клиент по кнопке «Заказать» идёт в карточку товара
             if (user.role === 'customer') {
                 const orderBtn = tr.querySelector('.order-btn');
                 if (orderBtn) {
@@ -168,7 +163,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             catalogBody.appendChild(tr);
         });
 
-        // Кнопки редактирования/удаления — только админ
         if (isAdmin) {
             catalogBody.querySelectorAll('.edit-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
@@ -184,7 +178,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     if (!confirm(`Удалить товар «${item.name}»?`)) return;
 
                     try {
-                        db.run(`DELETE FROM Products WHERE Product_Code = ${code}`);
+                        deleteProductCombined(db, code);   // ← БД + localStorage
                         catalog = catalog.filter(i => i.code !== code);
                         render();
                         showToast('Товар удалён', 'success');
@@ -196,7 +190,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // Обработчики тулбара
     if (isManager) {
         searchInput.addEventListener('input', e => {
             store.setCatalogPrefs({ ...store.getCatalogPrefs(), searchQuery: e.target.value });
