@@ -1,13 +1,45 @@
 'use strict';
 
+/* ============================================================
+ * Карта изображений товаров (по коду товара из БД)
+ * ============================================================ */
+const PRODUCT_IMAGES = {
+    1:  './Белые перчатки.png',
+    2:  './Черные перчатки.jpg',
+    3:  './Красный камень.jpg',
+    4:  './Чай от Юдера.jpg',
+    5:  './Карасик.jpg',
+    6:  './Очки Кейлуса.png',
+    7:  './Красная нитка от Энона.jpg',
+    8:  './Слёзы Киолле.png',
+    9:  './Ваза от Канны.jpg',
+    10: './Травы от Энона.jpg'
+};
+
+const PLACEHOLDER_IMAGE = 'https://placehold.co/300x300?text=No+Image';
+
+/* ============================================================
+ * Вспомогательные функции
+ * ============================================================ */
+function imageForCode(code) {
+    return PRODUCT_IMAGES[code] || PLACEHOLDER_IMAGE;
+}
+
+function roleLabel(role) {
+    const map = { customer: 'Клиент', manager: 'Менеджер', admin: 'Администратор' };
+    return map[role] || '';
+}
+
+/* ============================================================
+ * Страница заказа (order.html)
+ * ============================================================ */
 document.addEventListener('DOMContentLoaded', async () => {
     const user = requireAuth();
     if (!user) return;
 
-    const roleLabel = { customer: 'Клиент', manager: 'Менеджер', admin: 'Администратор' };
     document.getElementById('user-name').textContent = user.fullName;
     const roleEl = document.getElementById('user-role');
-    if (roleEl) roleEl.textContent = roleLabel[user.role] || '';
+    if (roleEl) roleEl.textContent = roleLabel(user.role);
 
     document.getElementById('back-to-orders')
         .addEventListener('click', () => { window.location.href = 'orders.html'; });
@@ -26,7 +58,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    // Доступ: клиент — только свой заказ; менеджер/админ — любой
     if (!store.isManager() && order.customer !== user.fullName) {
         showModal('Доступ запрещён', 'Вы можете просматривать только свои заказы.', 'error');
         setTimeout(() => { window.location.href = 'orders.html'; }, 1500);
@@ -46,20 +77,24 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.getElementById('page-title').textContent = `Заказ №${order.code}`;
 
-    // Информация о клиенте (из БД, если есть)
+    /* Информация о клиенте — из БД, если он там есть */
     const customerRows = query(db,
-        `SELECT * FROM Customers WHERE First_Name || ' ' || Last_Name = '${order.customer.replace(/'/g, "''")}'`
+        `SELECT * FROM Customers
+         WHERE First_Name || ' ' || Last_Name = '${order.customer.replace(/'/g, "''")}'`
     );
     const customerInfo = customerRows[0] || null;
 
-    // Собираем карточки товаров заказа
+    /* Карточки товаров заказа */
     const itemsHtml = (order.items || []).map((item, idx) => {
         const sum = item.price * item.quantity;
-        const imgUrl = `https://placehold.co/160x160?text=${encodeURIComponent(item.productName)}`;
+        const imgUrl = imageForCode(item.productCode);
 
         return `
             <div class="order-item">
-                <img class="order-item__image" src="${imgUrl}" alt="${item.productName}">
+                <img class="order-item__image"
+                     src="${imgUrl}"
+                     alt="${item.productName}"
+                     onerror="this.onerror=null; this.src='${PLACEHOLDER_IMAGE}'">
                 <div class="order-item__body">
                     <h4 class="order-item__title">${item.productName}</h4>
                     <p class="order-item__desc">${item.productName}</p>
@@ -82,14 +117,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         `;
     }).join('') || '<p class="data-table__empty">Позиций нет</p>';
 
-    // Поле даты — редактируемое только для админа
+    /* Поле даты — редактируемое только для админа */
     const dateHtml = isAdmin
         ? `<input id="order-date-input" class="field__input" type="date" value="${order.date}">
            <button id="save-date-btn" class="btn btn--primary btn--small" type="button"
                    style="margin-left:8px">Сохранить дату</button>`
         : formatDate(order.date);
 
-    // Информация о клиенте
     let customerHtml = `<p class="order-card__row"><b>Клиент:</b> ${order.customer}</p>`;
     if (customerInfo) {
         customerHtml += `
@@ -122,7 +156,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     /* ---------- Обработчики ---------- */
 
-    // Сохранение даты (админ)
     const saveDateBtn = document.getElementById('save-date-btn');
     if (saveDateBtn) {
         saveDateBtn.addEventListener('click', () => {
@@ -139,7 +172,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // Удаление позиции (менеджер и админ)
     document.querySelectorAll('.remove-item-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const idx = Number(btn.dataset.idx);
@@ -150,7 +182,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     });
 
-    // «Заказать ещё» — клиент добавляет ту же позицию в новый заказ
     document.querySelectorAll('.reorder-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const idx = Number(btn.dataset.idx);
@@ -181,7 +212,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     });
 
-    // Добавление позиции (менеджер/админ)
     const addItemBtn = document.getElementById('add-item-btn');
     if (addItemBtn) {
         addItemBtn.addEventListener('click', () => {
@@ -191,7 +221,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-/** Генерирует следующий номер заказа. */
+/* ============================================================
+ * Генератор следующего номера заказа
+ * ============================================================ */
 function generateOrderCode(db) {
     const local = store.getOrders().reduce((m, o) => Math.max(m, o.code), 0);
     const fromDb = query(db, 'SELECT MAX(Order_Code) AS m FROM Orders')[0]?.m || 0;
