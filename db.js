@@ -271,10 +271,11 @@ function ensureUiHelpers() {
         }
     });
 
-    window.showModal = function (title, text, type = 'info') {
-        const icons = { info: 'ℹ️', warning: '⚠️', error: '⛔' };
-        modalTitle.textContent = `${icons[type]} ${title}`;
+      window.showModal = function (title, text, type = 'info') {
+        modalTitle.textContent = title;
         modalText.textContent = text;
+        modal.classList.remove('modal--info', 'modal--warning', 'modal--error');
+        modal.classList.add(`modal--${type}`);
         modal.classList.add('modal--visible');
         modal.hidden = false;
     };
