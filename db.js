@@ -302,5 +302,116 @@ function updateCartBadge() {
     badge.textContent = count;
     badge.hidden = count === 0;
 }
+/* ============================================================
+ * ТОВАРЫ: объединяем БД + localStorage
+ * Нужно, чтобы изменения, сделанные в одной вкладке (добавление,
+ * редактирование, удаление товара), не терялись при переходе
+ * на другую страницу — там db.db скачивается заново.
+ * ============================================================ */
+
+/** Получить все товары: из БД + из localStorage (добавленные/изменённые). */
+function getProductsCombined(db) {
+    const fromDb = db
+        ? query(db, 'SELECT * FROM Products ORDER BY Product_Code')
+        : [];
+
+    const added    = JSON.parse(localStorage.getItem('productsAdded')    || '[]');
+    const edited   = JSON.parse(localStorage.getItem('productsEdited')   || '{}');
+    const deleted  = JSON.parse(localStorage.getItem('productsDeleted')  || '[]');
+
+    // Применяем правки к товарам из БД
+    let result = fromDb
+        .map(p => edited[p.Product_Code] ? { ...p, ...edited[p.Product_Code] } : p)
+        .filter(p => !deleted.includes(p.Product_Code));
+
+    // Добавляем новые (с картинками)
+    added.forEach(p => {
+        if (!result.some(r => r.Product_Code === p.Product_Code)) {
+            result.push(p);
+        }
+    });
+
+    result.sort((a, b) => a.Product_Code - b.Product_Code);
+    return result;
+}
+
+/** Добавить товар: пишем в БД (в памяти) и в localStorage. */
+function addProductCombined(db, product) {
+    // 1. БД (в памяти — на текущей странице)
+    if (db) {
+        try {
+            db.run(`
+                INSERT INTO Products (Product_Code, Product_Name, Price, Quantity)
+                VALUES (${product.Product_Code},
+                        '${String(product.Product_Name).replace(/'/g, "''")}',
+                        ${product.Price},
+                        ${product.Quantity})
+            `);
+        } catch (e) { console.warn('БД insert:', e.message); }
+    }
+
+    // 2. localStorage
+    const added = JSON.parse(localStorage.getItem('productsAdded') || '[]');
+    added.push(product);
+    localStorage.setItem('productsAdded', JSON.stringify(added));
+}
+
+/** Изменить товар. */
+function editProductCombined(db, code, patch) {
+    if (db) {
+        const sets = [];
+        if (patch.Product_Name !== undefined)
+            sets.push(`Product_Name = '${String(patch.Product_Name).replace(/'/g, "''")}'`);
+        if (patch.Price !== undefined)
+            sets.push(`Price = ${patch.Price}`);
+        if (patch.Quantity !== undefined)
+            sets.push(`Quantity = ${patch.Quantity}`);
+        if (sets.length) {
+            try { db.run(`UPDATE Products SET ${sets.join(', ')} WHERE Product_Code = ${code}`); }
+            catch (e) { console.warn('БД update:', e.message); }
+        }
+    }
+
+    const edited = JSON.parse(localStorage.getItem('productsEdited') || '{}');
+    edited[code] = { ...(edited[code] || {}), ...patch };
+    localStorage.setItem('productsEdited', JSON.stringify(edited));
+
+    // Если это был добавленный товар — правим в списке added
+    const added = JSON.parse(localStorage.getItem('productsAdded') || '[]');
+    const idx = added.findIndex(p => p.Product_Code === code);
+    if (idx !== -1) {
+        added[idx] = { ...added[idx], ...patch };
+        localStorage.setItem('productsAdded', JSON.stringify(added));
+    }
+}
+
+/** Удалить товар. */
+function deleteProductCombined(db, code) {
+    if (db) {
+        try { db.run(`DELETE FROM Products WHERE Product_Code = ${code}`); }
+        catch (e) { console.warn('БД delete:', e.message); }
+    }
+
+    const added = JSON.parse(localStorage.getItem('productsAdded') || '[]');
+    const withoutAdded = added.filter(p => p.Product_Code !== code);
+    localStorage.setItem('productsAdded', JSON.stringify(withoutAdded));
+
+    if (withoutAdded.length === added.length) {
+        const deleted = JSON.parse(localStorage.getItem('productsDeleted') || '[]');
+        if (!deleted.includes(code)) deleted.push(code);
+        localStorage.setItem('productsDeleted', JSON.stringify(deleted));
+    }
+}
+
+/** Получить картинку товара: либо из карты, либо из localStorage-товара. */
+function getProductImage(product) {
+    // Если товар добавлен пользователем — у него есть Image_Data (base64)
+    if (product.Image_Data) return product.Image_Data;
+    // Если это встроенный товар — из карты PRODUCT_IMAGES
+    if (typeof PRODUCT_IMAGES !== 'undefined' && PRODUCT_IMAGES[product.Product_Code]) {
+        return PRODUCT_IMAGES[product.Product_Code];
+    }
+    return 'https://placehold.co/300x300?text=No+Image';
+}
 
 document.addEventListener('DOMContentLoaded', ensureUiHelpers);
