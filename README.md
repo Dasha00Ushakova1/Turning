@@ -1,8 +1,5 @@
 # Turning Shop
 
-Клиент-серверное веб-приложение магазина Turning Shop.
-Работает полностью в браузере: HTML/CSS/JavaScript + SQLite (sql.js/WebAssembly).
-
 ## Функциональность
 
 ### Авторизация
@@ -41,7 +38,7 @@
 - **Администратор** может дополнительно менять дату заказа.
 
 ### Обработка ошибок
-- Модальные окна с иконками (ℹ️ / ⚠️ / ⛔) и заголовками.
+- Модальные окна с заголовками.
 - Валидация ввода количества и даты.
 - Проверка остатка товара при оформлении.
 
@@ -86,3 +83,91 @@
 - Vanilla JavaScript (ES2017+)
 - sql.js — SQLite, скомпилированный в WebAssembly
 - localStorage — хранение сессии, корзины и заказов
+
+
+## КОД БД
+
+
+CREATE TABLE Products (
+Product_Code INT PRIMARY KEY,
+Product_Name VARCHAR(255),
+Price DECIMAL(10, 2),
+Quantity INT
+);
+
+CREATE TABLE Customers (
+Customer_Code INT PRIMARY KEY,
+First_Name VARCHAR(255),
+Last_Name VARCHAR(255),
+Birth_Date DATE,
+Address VARCHAR(255),
+Phone VARCHAR(20)
+);
+
+CREATE TABLE Orders (
+Order_Code INT PRIMARY KEY,
+Customer_Code INT,
+Order_Date DATE,
+Total_Cost DECIMAL(10, 2),
+FOREIGN KEY (Customer_Code) REFERENCES Customers (Customer_Code)
+);
+
+CREATE TABLE Order_Details (
+Order_Code INT,
+Product_Code INT,
+Quantity INT,
+PRIMARY KEY (Order_Code, Product_Code),
+FOREIGN KEY (Order_Code) REFERENCES Orders (Order_Code),
+FOREIGN KEY (Product_Code) REFERENCES Products (Product_Code)
+);
+INSERT INTO Products (Product_Code, Product_Name, Price, Quantity)
+VALUES
+(1, 'Белые перчатки', 557.00, 10),
+(2, 'Черные перчатки', 420.00, 20),
+(3, 'Красный камень', 21.00, 1),
+(4, 'Чай от Юдера', 80.00, 10),
+(5, 'Карасик', 305.00, 1),
+(6, 'Очки Кейлуса', 520.00, 25),
+(7, 'Красная нитка от Энона', 435.00, 2),
+(8, 'Слёзы Киолле', 1102.00, 100),
+(9, 'Ваза от Канны', 1000.00, 5),
+(10, 'Травы от Энона', 1052.00, 25);
+
+INSERT INTO Customers (Customer_Code, First_Name, Last_Name, Birth_Date, Address, Phone)
+VALUES
+(1, 'Юдер', 'Айл', '2006-05-25', 'Горы Айрик', '8-800-123-4567'),
+(2, 'Кишиар', 'Ла Орр', '1997-02-08', 'Столица/Пелетта', '8-800-123-4568'),
+(3, 'Эвер', 'Бэк', '2000-03-03', 'Деревня', '8-800-123-4569'),
+(4, 'Хинн', 'Элдер', '2008-04-04', 'Лес Фей', '8-800-123-4570'),
+(5, 'Финн', 'Элдер', '2008-05-05', 'Лес Фей', '8-800-123-4571'),
+(6, 'Канна', 'Ванд', '2006-06-06', 'Столица', '8-800-123-4572'),
+(7, 'Стайбер', 'Рэндли', '1983-07-07', 'Столица', '8-800-123-4573'),
+(8, 'Гакейн', 'Болунвалд', '2005-08-08', 'Юг Империи', '8-800-123-4574'),
+(9, 'Нахан', 'Martin', '2004-09-09', 'Юг Пустыни', '8-800-123-4575'),
+(10, 'Натан', 'Цукерман', '1999-10-10', 'Пеллета', '8-800-123-4576');
+
+INSERT INTO Orders (Order_Code, Customer_Code, Order_Date, Total_Cost)
+VALUES
+(1, 8, '2026-01-01', 1102.00),
+(2, 1, '2026-01-15', 557.00),
+(3, 2, '2026-02-01', 420.00),
+(4, 4, '2026-02-15', 80.00),
+(5, 5, '2026-03-01', 305.00),
+(6, 6, '2026-03-15', 520.00),
+(7, 7, '2026-04-01', 435.00),
+(8, 10, '2026-04-15', 1052.00),
+(9, 9, '2026-05-01', 1000.00),
+(10, 1, '2026-05-15', 21.00);
+
+INSERT INTO Order_Details (Order_Code, Product_Code, Quantity)
+VALUES
+(1, 8, 1),
+(2, 1, 1),
+(3, 3, 1),
+(4, 4, 2),
+(5, 5, 1),
+(6, 6, 1),
+(7, 7, 1),
+(8, 10, 25),
+(9, 9, 5),
+(10, 3, 1);
