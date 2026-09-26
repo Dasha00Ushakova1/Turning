@@ -87,7 +87,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     /* Карточки товаров заказа */
     const itemsHtml = (order.items || []).map((item, idx) => {
         const sum = item.price * item.quantity;
-        const imgUrl = imageForCode(item.productCode);
+        const prodRow = query(db, `SELECT Image_Data FROM Products WHERE Product_Code = ${item.productCode}`)[0];
+        const imgUrl = (prodRow && prodRow.Image_Data) || imageForCode(item.productCode);
 
         return `
             <div class="order-item">
