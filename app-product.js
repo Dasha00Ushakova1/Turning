@@ -136,14 +136,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    const rows = query(db, `SELECT * FROM Products WHERE Product_Code = ${code}`);
-    if (rows.length === 0) {
+       // Ищем товар в объединённом списке: БД + localStorage
+    const allProducts = getProductsCombined(db);
+    const p = allProducts.find(x => x.Product_Code === Number(code));
+
+    if (!p) {
         showModal('Товар не найден', 'Возможно, он был удалён.', 'error');
         setTimeout(() => { window.location.href = 'catalog.html'; }, 1500);
         return;
     }
-
-    const p = rows[0];
     const { finalPrice, discountPercent } = calculateDiscount(p.Price, p.Quantity);
 
     const product = {
