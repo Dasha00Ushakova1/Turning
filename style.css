@@ -361,6 +361,52 @@ body::before {
     white-space: nowrap;
     border-bottom: 1px solid var(--color-border);
 }
+/* ==============================================================
+   Золотой узор на фоне экрана входа
+   ============================================================== */
+.screen--active::before,
+body.page--generator::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image:
+        /* Уголки — золотые завитки */
+        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'><g fill='none' stroke='%23c9a86a' stroke-width='1.2' opacity='0.55'><path d='M20 20 Q60 20 60 60 T100 100'/><path d='M20 20 Q20 60 60 60'/><circle cx='60' cy='60' r='3' fill='%23c9a86a'/><path d='M20 40 Q40 40 40 60'/><path d='M40 20 Q40 40 60 40'/></g></svg>"),
+        /* Второй узор — снизу */
+        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'><g fill='none' stroke='%23c9a86a' stroke-width='1.2' opacity='0.55'><path d='M180 180 Q140 180 140 140 T100 100'/><path d='M180 180 Q180 140 140 140'/><circle cx='140' cy='140' r='3' fill='%23c9a86a'/><path d='M180 160 Q160 160 160 140'/><path d='M160 180 Q160 160 140 160'/></g></svg>"),
+        /* Мелкие звёздочки-искры */
+        radial-gradient(circle at 15% 20%, rgba(201, 168, 106, 0.25) 0px, transparent 2px),
+        radial-gradient(circle at 85% 80%, rgba(201, 168, 106, 0.25) 0px, transparent 2px),
+        radial-gradient(circle at 50% 50%, rgba(201, 168, 106, 0.15) 0px, transparent 1.5px),
+        radial-gradient(circle at 30% 70%, rgba(201, 168, 106, 0.2) 0px, transparent 2px),
+        radial-gradient(circle at 70% 30%, rgba(201, 168, 106, 0.2) 0px, transparent 2px);
+    background-position:
+        top left,
+        bottom right,
+        0 0,
+        0 0,
+        0 0,
+        0 0,
+        0 0;
+    background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat;
+    background-size: 260px 260px, 260px 260px, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+}
+
+/* Слой поверх узора — затемнение, чтобы текст читался */
+.screen--active::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background: radial-gradient(
+        ellipse at center,
+        transparent 30%,
+        rgba(10, 10, 26, 0.55) 90%
+    );
+}
 .data-table__body td {
     padding: 14px 16px;
     border-bottom: 1px solid var(--color-border-soft);
