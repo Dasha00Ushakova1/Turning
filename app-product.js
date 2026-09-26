@@ -15,9 +15,17 @@ const PRODUCT_IMAGES = {
     9:  './Ваза от Канны.jpg',
     10: './Травы от Энона.jpg'
 };
-
-/** Заглушка, если картинки для товара нет. */
 const PLACEHOLDER_IMAGE = 'https://placehold.co/300x300?text=No+Image';
+
+/* ---------- Утилита: чтение файла в base64 ---------- */
+function readImageAsDataUrl(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
 
 document.addEventListener('DOMContentLoaded', async () => {
     const user = requireAuth();
@@ -35,7 +43,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const mode = params.get('mode') || 'view';
     const isAdmin = store.isAdmin();
 
-    /* ---------- Загрузка БД ---------- */
     let db;
     try {
         db = await loadDatabase();
@@ -44,13 +51,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    /* ---------- Режим «Создание» — только для админа ---------- */
     if (mode === 'create' && isAdmin) {
         renderCreateForm(db);
         return;
     }
 
-    /* ---------- Режим «Просмотр / Редактирование» ---------- */
     const code = store.getSelectedProduct();
     if (!code) {
         window.location.href = 'catalog.html';
@@ -75,7 +80,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         finalPrice,
         discountPercent,
         stockLabel: getStockLabel(p.Quantity),
-        description: p.Description || null
+        description: p.Description || null,
+        imageData: p.Image_Data || null
     };
 
     if (mode === 'edit' && isAdmin) {
@@ -86,19 +92,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 /* ============================================================
- * Просмотр товара
+ * Просмотр
  * ============================================================ */
 function renderView(db, product, user) {
-    /* Размеры: таблицы Product_Sizes может не быть — не падаем */
     let sizes = [];
     try {
         sizes = query(db,
             `SELECT Size FROM Product_Sizes WHERE Product_Code = ${product.code}`
         ).map(r => r.Size);
-    } catch (e) {
-        console.warn('Таблица Product_Sizes недоступна:', e.message);
-        sizes = [];
-    }
+    } catch (e) { sizes = []; }
 
     const sizesHtml = sizes.length
         ? `<div class="product__sizes">${sizes.map((s, i) =>
@@ -108,10 +110,10 @@ function renderView(db, product, user) {
               </label>`).join('')}</div>`
         : '<p class="product__no-sizes">Размеры не указаны</p>';
 
-    /* Картинка: сначала — из карты, иначе — заглушка */
-    const imageUrl = PRODUCT_IMAGES[product.code] || PLACEHOLDER_IMAGE;
+    const imageUrl = product.imageData
+        || PRODUCT_IMAGES[product.code]
+        || PLACEHOLDER_IMAGE;
 
-    /* Описание: если в БД нет — берём название товара */
     const description = product.description || product.name;
 
     const actionsHtml = user.role === 'customer'
@@ -162,7 +164,6 @@ function renderView(db, product, user) {
 
     if (user.role !== 'customer') return;
 
-    /* ---------- Валидация и оформление заказа (только для клиента) ---------- */
     const quantityInput = document.getElementById('product-quantity');
     const quantityError = document.getElementById('quantity-error');
 
@@ -189,7 +190,6 @@ function renderView(db, product, user) {
                 `На складе осталось ${product.quantity} шт.`, 'warning');
             return;
         }
-
         const sizeInput = document.querySelector('input[name="size"]:checked');
         const size = sizeInput ? sizeInput.value : '—';
 
@@ -208,12 +208,10 @@ function renderView(db, product, user) {
             }],
             total: product.finalPrice * value
         };
-
         store.addOrder(order);
 
         showModal('Заказ оформлен',
-            `Заказ №${orderCode} на сумму ${formatPrice(order.total)} сохранён.`,
-            'info');
+            `Заказ №${orderCode} на сумму ${formatPrice(order.total)} сохранён.`, 'info');
         document.getElementById('modal-ok').addEventListener('click', () => {
             window.location.href = 'orders.html';
         }, { once: true });
@@ -221,9 +219,13 @@ function renderView(db, product, user) {
 }
 
 /* ============================================================
- * Редактирование (только админ)
+ * Редактирование (админ) — с картинкой
  * ============================================================ */
 function renderEditForm(db, product) {
+    const currentImage = product.imageData
+        || PRODUCT_IMAGES[product.code]
+        || PLACEHOLDER_IMAGE;
+
     document.getElementById('product-details').innerHTML = `
         <div class="product__info" style="grid-column: 1 / -1">
             <h2 class="product__name">Редактирование товара №${product.code}</h2>
@@ -242,6 +244,14 @@ function renderEditForm(db, product) {
                 <input id="edit-quantity" class="field__input" type="number" min="0"
                        value="${product.quantity}">
             </label>
+            <label class="field">
+                <span class="field__label">Картинка</span>
+                <input id="edit-image" class="field__input" type="file" accept="image/*">
+                <div class="image-preview" style="margin-top:8px">
+                    <img id="image-preview" src="${currentImage}" alt="Предпросмотр"
+                         style="max-width:160px; max-height:160px; border-radius:8px;">
+                </div>
+            </label>
 
             <div class="product__actions">
                 <button id="save-btn" class="btn btn--primary" type="button">Сохранить</button>
@@ -249,6 +259,24 @@ function renderEditForm(db, product) {
             </div>
         </div>
     `;
+
+    let newImageData = null;
+
+    document.getElementById('edit-image').addEventListener('change', async e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (!file.type.startsWith('image/')) {
+            showModal('Ошибка', 'Можно загрузить только изображение.', 'warning');
+            return;
+        }
+        if (file.size > 2 * 1024 * 1024) {
+            showModal('Слишком большой файл',
+                'Максимальный размер — 2 МБ.', 'warning');
+            return;
+        }
+        newImageData = await readImageAsDataUrl(file);
+        document.getElementById('image-preview').src = newImageData;
+    });
 
     document.getElementById('cancel-btn')
         .addEventListener('click', () => { window.location.href = 'catalog.html'; });
@@ -258,26 +286,21 @@ function renderEditForm(db, product) {
         const price = Number(document.getElementById('edit-price').value);
         const quantity = Number(document.getElementById('edit-quantity').value);
 
-        if (!name) {
-            showModal('Ошибка', 'Название не может быть пустым.', 'warning');
-            return;
-        }
-        if (!(price >= 0)) {
-            showModal('Ошибка', 'Цена должна быть неотрицательным числом.', 'warning');
-            return;
-        }
+        if (!name) { showModal('Ошибка', 'Название не может быть пустым.', 'warning'); return; }
+        if (!(price >= 0)) { showModal('Ошибка', 'Цена должна быть неотрицательной.', 'warning'); return; }
         if (!Number.isInteger(quantity) || quantity < 0) {
-            showModal('Ошибка', 'Количество должно быть целым неотрицательным числом.', 'warning');
-            return;
+            showModal('Ошибка', 'Количество должно быть целым неотрицательным.', 'warning'); return;
         }
 
-        const safeName = name.replace(/'/g, "''");
+        const patch = {
+            Product_Name: name,
+            Price: price,
+            Quantity: quantity
+        };
+        if (newImageData) patch.Image_Data = newImageData;
+
         try {
-            db.run(`UPDATE Products SET
-                        Product_Name = '${safeName}',
-                        Price = ${price},
-                        Quantity = ${quantity}
-                    WHERE Product_Code = ${product.code}`);
+            editProductCombined(db, product.code, patch);
             showModal('Готово', 'Товар обновлён.', 'info');
             document.getElementById('modal-ok').addEventListener('click', () => {
                 window.location.href = 'catalog.html';
@@ -289,10 +312,10 @@ function renderEditForm(db, product) {
 }
 
 /* ============================================================
- * Создание (только админ)
+ * Создание (админ) — с картинкой
  * ============================================================ */
 function renderCreateForm(db) {
-    const nextCode = (query(db, 'SELECT MAX(Product_Code) AS m FROM Products')[0]?.m || 0) + 1;
+    const nextCode = (getProductsCombined(db).reduce((m, p) => Math.max(m, p.Product_Code), 0)) + 1;
 
     document.getElementById('product-details').innerHTML = `
         <div class="product__info" style="grid-column: 1 / -1">
@@ -311,6 +334,14 @@ function renderCreateForm(db) {
                 <span class="field__label">Количество</span>
                 <input id="edit-quantity" class="field__input" type="number" min="0" value="1">
             </label>
+            <label class="field">
+                <span class="field__label">Картинка</span>
+                <input id="edit-image" class="field__input" type="file" accept="image/*">
+                <div class="image-preview" style="margin-top:8px">
+                    <img id="image-preview" src="${PLACEHOLDER_IMAGE}" alt="Предпросмотр"
+                         style="max-width:160px; max-height:160px; border-radius:8px;">
+                </div>
+            </label>
 
             <div class="product__actions">
                 <button id="save-btn" class="btn btn--primary" type="button">Создать</button>
@@ -318,6 +349,24 @@ function renderCreateForm(db) {
             </div>
         </div>
     `;
+
+    let newImageData = null;
+
+    document.getElementById('edit-image').addEventListener('change', async e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (!file.type.startsWith('image/')) {
+            showModal('Ошибка', 'Можно загрузить только изображение.', 'warning');
+            return;
+        }
+        if (file.size > 2 * 1024 * 1024) {
+            showModal('Слишком большой файл',
+                'Максимальный размер — 2 МБ. Сожмите изображение.', 'warning');
+            return;
+        }
+        newImageData = await readImageAsDataUrl(file);
+        document.getElementById('image-preview').src = newImageData;
+    });
 
     document.getElementById('cancel-btn')
         .addEventListener('click', () => { window.location.href = 'catalog.html'; });
@@ -327,19 +376,21 @@ function renderCreateForm(db) {
         const price = Number(document.getElementById('edit-price').value);
         const quantity = Number(document.getElementById('edit-quantity').value);
 
-        if (!name) {
-            showModal('Ошибка', 'Введите название товара.', 'warning');
-            return;
-        }
+        if (!name) { showModal('Ошибка', 'Введите название товара.', 'warning'); return; }
         if (!(price >= 0) || !Number.isInteger(quantity) || quantity < 0) {
-            showModal('Ошибка', 'Проверьте цену и количество.', 'warning');
-            return;
+            showModal('Ошибка', 'Проверьте цену и количество.', 'warning'); return;
         }
 
-        const safeName = name.replace(/'/g, "''");
+        const newProduct = {
+            Product_Code: nextCode,
+            Product_Name: name,
+            Price: price,
+            Quantity: quantity,
+            Image_Data: newImageData || null
+        };
+
         try {
-            db.run(`INSERT INTO Products (Product_Code, Product_Name, Price, Quantity)
-                    VALUES (${nextCode}, '${safeName}', ${price}, ${quantity})`);
+            addProductCombined(db, newProduct);
             showModal('Готово', `Товар «${name}» добавлен.`, 'info');
             document.getElementById('modal-ok').addEventListener('click', () => {
                 window.location.href = 'catalog.html';
