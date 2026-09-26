@@ -65,7 +65,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         orders.forEach(order => {
             const composition = (order.items || [])
-                .map(i => `${i.productName} (${i.size}) × ${i.quantity}`)
+                .map(i => {
+                    const size = (i.size && i.size !== '—') ? ` (${i.size})` : '';
+                    return `${i.productName}${size} × ${i.quantity}`;
+                })
                 .join('; ');
 
             const tr = document.createElement('tr');
