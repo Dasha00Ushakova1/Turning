@@ -27,6 +27,82 @@ function readImageAsDataUrl(file) {
     });
 }
 
+/* ---------- Утилита: HTML зоны загрузки картинки ---------- */
+function imageDropzoneHtml(previewSrc) {
+    return `
+        <div class="field">
+            <span class="field__label">Картинка товара</span>
+            <div class="dropzone" id="dropzone">
+                <input type="file" id="edit-image" accept="image/*" hidden>
+                <img id="image-preview" class="dropzone__preview" src="${previewSrc}" alt="Предпросмотр">
+                <div class="dropzone__overlay">
+                    <span class="dropzone__icon">🖼</span>
+                    <span class="dropzone__text">Перетащите картинку сюда</span>
+                    <span class="dropzone__hint">или нажмите, чтобы выбрать файл</span>
+                    <span class="dropzone__hint">JPG, PNG · до 2 МБ</span>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+/* ---------- Утилита: навесить обработчики на dropzone ---------- */
+function bindImageDropzone(onImageReady) {
+    const dropzone = document.getElementById('dropzone');
+    const input    = document.getElementById('edit-image');
+    const preview  = document.getElementById('image-preview');
+    if (!dropzone || !input || !preview) return;
+
+    function setImage(file) {
+        if (!file) return;
+        if (!file.type.startsWith('image/')) {
+            showModal('Ошибка', 'Можно загрузить только изображение.', 'warning');
+            return;
+        }
+        if (file.size > 2 * 1024 * 1024) {
+            showModal('Слишком большой файл',
+                'Максимальный размер — 2 МБ. Сожмите изображение.', 'warning');
+            return;
+        }
+        readImageAsDataUrl(file).then(dataUrl => {
+            preview.src = dataUrl;
+            dropzone.classList.add('dropzone--filled');
+            onImageReady(dataUrl);
+        });
+    }
+
+    // Клик по зоне → открыть выбор файла
+    dropzone.addEventListener('click', () => input.click());
+
+    // Выбор файла через диалог
+    input.addEventListener('change', e => setImage(e.target.files[0]));
+
+    // Drag & Drop
+    ['dragenter', 'dragover'].forEach(evt => {
+        dropzone.addEventListener(evt, e => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropzone.classList.add('dropzone--over');
+        });
+    });
+
+    ['dragleave', 'drop'].forEach(evt => {
+        dropzone.addEventListener(evt, e => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropzone.classList.remove('dropzone--over');
+        });
+    });
+
+    dropzone.addEventListener('drop', e => {
+        const file = e.dataTransfer.files[0];
+        setImage(file);
+    });
+}
+
+/* ============================================================
+ * Точка входа
+ * ============================================================ */
 document.addEventListener('DOMContentLoaded', async () => {
     const user = requireAuth();
     if (!user) return;
@@ -219,7 +295,7 @@ function renderView(db, product, user) {
 }
 
 /* ============================================================
- * Редактирование (админ) — с картинкой
+ * Редактирование (админ)
  * ============================================================ */
 function renderEditForm(db, product) {
     const currentImage = product.imageData
@@ -244,14 +320,8 @@ function renderEditForm(db, product) {
                 <input id="edit-quantity" class="field__input" type="number" min="0"
                        value="${product.quantity}">
             </label>
-            <label class="field">
-                <span class="field__label">Картинка</span>
-                <input id="edit-image" class="field__input" type="file" accept="image/*">
-                <div class="image-preview" style="margin-top:8px">
-                    <img id="image-preview" src="${currentImage}" alt="Предпросмотр"
-                         style="max-width:160px; max-height:160px; border-radius:8px;">
-                </div>
-            </label>
+
+            ${imageDropzoneHtml(currentImage)}
 
             <div class="product__actions">
                 <button id="save-btn" class="btn btn--primary" type="button">Сохранить</button>
@@ -261,22 +331,7 @@ function renderEditForm(db, product) {
     `;
 
     let newImageData = null;
-
-    document.getElementById('edit-image').addEventListener('change', async e => {
-        const file = e.target.files[0];
-        if (!file) return;
-        if (!file.type.startsWith('image/')) {
-            showModal('Ошибка', 'Можно загрузить только изображение.', 'warning');
-            return;
-        }
-        if (file.size > 2 * 1024 * 1024) {
-            showModal('Слишком большой файл',
-                'Максимальный размер — 2 МБ.', 'warning');
-            return;
-        }
-        newImageData = await readImageAsDataUrl(file);
-        document.getElementById('image-preview').src = newImageData;
-    });
+    bindImageDropzone(dataUrl => { newImageData = dataUrl; });
 
     document.getElementById('cancel-btn')
         .addEventListener('click', () => { window.location.href = 'catalog.html'; });
@@ -312,7 +367,7 @@ function renderEditForm(db, product) {
 }
 
 /* ============================================================
- * Создание (админ) — с картинкой
+ * Создание (админ)
  * ============================================================ */
 function renderCreateForm(db) {
     const nextCode = (getProductsCombined(db).reduce((m, p) => Math.max(m, p.Product_Code), 0)) + 1;
@@ -334,14 +389,8 @@ function renderCreateForm(db) {
                 <span class="field__label">Количество</span>
                 <input id="edit-quantity" class="field__input" type="number" min="0" value="1">
             </label>
-            <label class="field">
-                <span class="field__label">Картинка</span>
-                <input id="edit-image" class="field__input" type="file" accept="image/*">
-                <div class="image-preview" style="margin-top:8px">
-                    <img id="image-preview" src="${PLACEHOLDER_IMAGE}" alt="Предпросмотр"
-                         style="max-width:160px; max-height:160px; border-radius:8px;">
-                </div>
-            </label>
+
+            ${imageDropzoneHtml(PLACEHOLDER_IMAGE)}
 
             <div class="product__actions">
                 <button id="save-btn" class="btn btn--primary" type="button">Создать</button>
@@ -351,22 +400,7 @@ function renderCreateForm(db) {
     `;
 
     let newImageData = null;
-
-    document.getElementById('edit-image').addEventListener('change', async e => {
-        const file = e.target.files[0];
-        if (!file) return;
-        if (!file.type.startsWith('image/')) {
-            showModal('Ошибка', 'Можно загрузить только изображение.', 'warning');
-            return;
-        }
-        if (file.size > 2 * 1024 * 1024) {
-            showModal('Слишком большой файл',
-                'Максимальный размер — 2 МБ. Сожмите изображение.', 'warning');
-            return;
-        }
-        newImageData = await readImageAsDataUrl(file);
-        document.getElementById('image-preview').src = newImageData;
-    });
+    bindImageDropzone(dataUrl => { newImageData = dataUrl; });
 
     document.getElementById('cancel-btn')
         .addEventListener('click', () => { window.location.href = 'catalog.html'; });
