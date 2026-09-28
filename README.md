@@ -173,26 +173,7 @@ VALUES
 (10, 3, 1);
 
 ##Схема БД
+
+
 <img width="392" height="441" alt="image" src="https://github.com/user-attachments/assets/cfd0091a-93ee-4cdb-8870-516c06d9878e" />
-┌─────────────────┐         ┌────────────────────┐
-│   Customers     │         │      Orders        │
-├─────────────────┤         ├────────────────────┤
-│ Customer_Code PK│────1───∞│ Customer_Code  FK  │
-│ First_Name      │         │ Order_Code     PK  │
-│ Last_Name       │         │ Order_Date         │
-│ Birth_Date      │         │ Total_Cost         │
-│ Address         │         └─────────┬──────────┘
-│ Phone           │                   │
-└─────────────────┘                   │ 1
-                                      │
-                                      ∞
-┌─────────────────┐         ┌────────┴───────────┐
-│   Products      │         │   Order_Details    │
-├─────────────────┤         ├────────────────────┤
-│ Product_Code PK │────1───∞│ Product_Code  FK   │
-│ Product_Name    │         │ Order_Code    FK   │
-│ Price           │         │ Quantity           │
-│ Quantity        │         │ PK (Order_Code,    │
-└─────────────────┘         │     Product_Code)  │
-                            └────────────────────┘
 
