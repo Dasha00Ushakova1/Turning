@@ -1,4 +1,4 @@
-<img width="392" height="441" alt="image" src="https://github.com/user-attachments/assets/cfd0091a-93ee-4cdb-8870-516c06d9878e" /># Turning Shop
+# Turning Shop
 
 ## Функциональность
 
@@ -173,6 +173,7 @@ VALUES
 (10, 3, 1);
 
 ##Схема БД
+<img width="392" height="441" alt="image" src="https://github.com/user-attachments/assets/cfd0091a-93ee-4cdb-8870-516c06d9878e" />
 ┌─────────────────┐         ┌────────────────────┐
 │   Customers     │         │      Orders        │
 ├─────────────────┤         ├────────────────────┤
