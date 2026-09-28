@@ -79,9 +79,9 @@
 
 ## Технологии
 
-- HTML5, CSS3 (БЭМ-подобные классы)
-- Vanilla JavaScript (ES2017+)
-- sql.js — SQLite, скомпилированный в WebAssembly
+- HTML
+- Vanilla JavaScript 
+- sql.js — SQLite
 - localStorage — хранение сессии, корзины и заказов
 
 
